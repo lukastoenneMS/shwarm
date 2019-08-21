@@ -12,9 +12,9 @@ namespace Shwarm.Vdb
         public Vector3 boidPosition;
     }
 
-    public class DataInstanceMap
+    internal class DataInstanceMap
     {
-        private readonly Dictionary<int, DataBlob> blobs = new Dictionary<int, DataBlob>();
+        public readonly Dictionary<int, DataBlob> blobs = new Dictionary<int, DataBlob>();
 
         public void RecordData(int id, BoidState data)
         {
@@ -39,7 +39,7 @@ namespace Shwarm.Vdb
     {
         public double timestamp;
 
-        public readonly DataInstanceMap data = new DataInstanceMap();
+        internal readonly DataInstanceMap data = new DataInstanceMap();
 
         public Keyframe()
         {

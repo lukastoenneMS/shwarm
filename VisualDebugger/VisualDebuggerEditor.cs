@@ -60,5 +60,27 @@ namespace Shwarm.Vdb
 
             return newFrame;
         }
+
+        void OnSceneGUI()
+        {
+            SceneGUIRenderer renderer = new SceneGUIRenderer(SceneView.lastActiveSceneView);
+            vdb.Render(renderer, component.CurrentFrame);
+        }
+    }
+
+    internal class SceneGUIRenderer : IVisualDebuggerRenderer
+    {
+        SceneView sceneView;
+
+        public SceneGUIRenderer(SceneView sceneView)
+        {
+            this.sceneView = sceneView;
+        }
+
+        public void DrawPoint(int id, Vector3 p, float size)
+        {
+            Handles.RectangleHandleCap(id, p, sceneView.rotation, size, EventType.Ignore);
+            // Handles.DrawLine(Vector3.zero, p);
+        }
     }
 }

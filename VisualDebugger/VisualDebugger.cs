@@ -2,6 +2,7 @@
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace Shwarm.Vdb
 {
@@ -25,5 +26,24 @@ namespace Shwarm.Vdb
         {
             keyframes.Clear();
         }
+
+        public void Render(IVisualDebuggerRenderer renderer, int currentFrame)
+        {
+            if (currentFrame < 0 || currentFrame >= keyframes.Count)
+            {
+                return;
+            }
+
+            Keyframe keyframe = keyframes[currentFrame];
+            foreach (var blob in keyframe.data.blobs)
+            {
+                renderer.DrawPoint(blob.Key, blob.Value.boidPosition, 0.01f);
+            }
+        }
+    }
+
+    public interface IVisualDebuggerRenderer
+    {
+        void DrawPoint(int id, Vector3 p, float size);
     }
 }
