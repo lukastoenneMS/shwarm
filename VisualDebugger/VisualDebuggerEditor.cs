@@ -17,7 +17,10 @@ namespace Shwarm.Vdb
 
         private static readonly Dictionary<System.Type, DrawFeatureGUI> drawFeatureGuiRegistry = new Dictionary<System.Type, DrawFeatureGUI>()
         {
+            { typeof(BoidPositionsFeature), (editor, feature) => editor.DrawFeatureGUIImpl(feature as BoidPositionsFeature) },
             { typeof(BoidPathsFeature), (editor, feature) => editor.DrawFeatureGUIImpl(feature as BoidPathsFeature) },
+            { typeof(BoidVelocityFeature), (editor, feature) => editor.DrawFeatureGUIImpl(feature as BoidVelocityFeature) },
+            { typeof(BoidRotationFeature), (editor, feature) => editor.DrawFeatureGUIImpl(feature as BoidRotationFeature) },
         };
 
         void OnEnable()
@@ -76,6 +79,10 @@ namespace Shwarm.Vdb
                 {
                     guiFn(this, feature);
                 }
+                else
+                {
+                    throw new KeyNotFoundException($"No GUI draw function found for VDB feature {feature.Name}");
+                }
             }
 
             serializedObject.ApplyModifiedProperties ();
@@ -94,16 +101,32 @@ namespace Shwarm.Vdb
             return newFrame;
         }
 
+        private void DrawFeatureGUIImpl(BoidPositionsFeature feature)
+        {
+        }
+
         private void DrawFeatureGUIImpl(BoidPathsFeature feature)
         {
             feature.FramesBeforeCurrent = EditorGUILayout.IntField("Frames Before Current", feature.FramesBeforeCurrent);
             feature.FramesAfterCurrent = EditorGUILayout.IntField("Frames After Current", feature.FramesAfterCurrent);
         }
 
+        private void DrawFeatureGUIImpl(BoidVelocityFeature feature)
+        {
+            feature.Scale = EditorGUILayout.Slider("Scale", feature.Scale, 0.0f, 1.0f);
+        }
+
+        private void DrawFeatureGUIImpl(BoidRotationFeature feature)
+        {
+            feature.Scale = EditorGUILayout.Slider("Scale", feature.Scale, 0.0f, 1.0f);
+        }
+
         void OnSceneGUI()
         {
             if (Event.current.type == EventType.Repaint)
             {
+                Handles.zTest = UnityEngine.Rendering.CompareFunction.LessEqual;
+
                 SceneGUIRenderer renderer = new SceneGUIRenderer(SceneView.lastActiveSceneView);
                 vdb.Render(renderer, component.CurrentFrame);
             }
@@ -119,20 +142,29 @@ namespace Shwarm.Vdb
             this.sceneView = sceneView;
         }
 
-        public void DrawPoint(int id, Vector3 p, float size)
+        public void DrawPoint(int id, Vector3 p, float size, Color color)
         {
+            Handles.color = color;
             Handles.RectangleHandleCap(id, p, sceneView.rotation, size, EventType.Repaint);
         }
 
-        public void DrawLine(int id, Vector3 a, Vector3 b)
+        public void DrawLine(int id, Vector3 a, Vector3 b, Color color)
         {
+            Handles.color = color;
             Handles.DrawLine(a, b);
         }
 
-        public void DrawLines(Vector3[] segments)
+        public void DrawLines(Vector3[] segments, Color color)
         {
+            Handles.color = color;
             Debug.Assert((segments.Length & 1) == 0, "Segments list must have an even number of points");
             Handles.DrawLines(segments);
+        }
+
+        public void DrawArc(Vector3 center, Vector3 normal, Vector3 from, float angle, float radius, Color color)
+        {
+            Handles.color = color;
+            Handles.DrawSolidArc(center, normal, from, angle, radius);
         }
     }
 }

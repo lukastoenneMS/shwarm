@@ -9,7 +9,16 @@ namespace Shwarm.Vdb
 {
     public struct DataBlob
     {
-        public Vector3 boidPosition;
+        public struct BoidState
+        {
+            public Vector3 position;
+            public Vector3 velocity;
+            public Vector3 direction;
+            public float roll;
+            public Vector3 angularVelocity;
+        }
+
+        public BoidState boid;
     }
 
     internal class DataInstanceMap
@@ -18,8 +27,12 @@ namespace Shwarm.Vdb
 
         public void RecordData(int id, BoidState data)
         {
-            DataBlob blob;
-            blob.boidPosition = data.position;
+            DataBlob blob = new DataBlob();
+            blob.boid.position = data.position;
+            blob.boid.velocity = data.velocity;
+            blob.boid.direction = data.direction;
+            blob.boid.roll = data.roll;
+            blob.boid.angularVelocity = data.angularVelocity;
 
             blobs[id] = blob;
         }

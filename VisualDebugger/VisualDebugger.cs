@@ -12,6 +12,8 @@ namespace Shwarm.Vdb
         {
             new BoidPositionsFeature(),
             new BoidPathsFeature(),
+            new BoidVelocityFeature(),
+            new BoidRotationFeature(),
         };
 
         private readonly List<Keyframe> keyframes = new List<Keyframe>();
@@ -52,9 +54,10 @@ namespace Shwarm.Vdb
 
     public interface IVisualDebuggerRenderer
     {
-        void DrawPoint(int id, Vector3 p, float size);
-        void DrawLine(int id, Vector3 a, Vector3 b);
-        void DrawLines(Vector3[] segments);
+        void DrawPoint(int id, Vector3 p, float size, Color color);
+        void DrawLine(int id, Vector3 a, Vector3 b, Color color);
+        void DrawLines(Vector3[] segments, Color color);
+        void DrawArc(Vector3 center, Vector3 normal, Vector3 from, float angle, float radius, Color color);
     }
 
     public abstract class VisualDebuggerFeature
@@ -77,7 +80,7 @@ namespace Shwarm.Vdb
 
             foreach (var blob in keyframe.data.blobs)
             {
-                renderer.DrawPoint(blob.Key, blob.Value.boidPosition, 0.01f);
+                renderer.DrawPoint(blob.Key, blob.Value.boid.position, 0.01f, Color.white);
             }
         }
     }
@@ -126,8 +129,8 @@ namespace Shwarm.Vdb
                 {
                     if (prevKeyframe.data.blobs.TryGetValue(blob.Key, out DataBlob prevData))
                     {
-                        segments[seg] = prevData.boidPosition;
-                        segments[seg + 1] = blob.Value.boidPosition;
+                        segments[seg] = prevData.boid.position;
+                        segments[seg + 1] = blob.Value.boid.position;
                         seg += 2;
                     }
                 }
@@ -135,7 +138,43 @@ namespace Shwarm.Vdb
                 prevKeyframe = keyframe;
             }
 
-            renderer.DrawLines(segments);
+            renderer.DrawLines(segments, Color.gray);
+        }
+    }
+
+    public class BoidVelocityFeature : VisualDebuggerFeature
+    {
+        public override string Name => "Boid Velocities";
+
+        public float Scale = 1.0f;
+
+        public override void Render(VisualDebugger vdb, IVisualDebuggerRenderer renderer, int currentFrame)
+        {
+            Keyframe keyframe = vdb.GetKeyframe(currentFrame);
+
+            foreach (var blob in keyframe.data.blobs)
+            {
+                renderer.DrawLine(blob.Key, blob.Value.boid.position, blob.Value.boid.position + blob.Value.boid.velocity * Scale, Color.yellow);
+            }
+        }
+    }
+
+    public class BoidRotationFeature : VisualDebuggerFeature
+    {
+        public override string Name => "Boid Rotation";
+
+        public float Scale = 1.0f;
+
+        public override void Render(VisualDebugger vdb, IVisualDebuggerRenderer renderer, int currentFrame)
+        {
+            Keyframe keyframe = vdb.GetKeyframe(currentFrame);
+
+            foreach (var blob in keyframe.data.blobs)
+            {
+                var data = blob.Value.boid;
+                renderer.DrawLine(blob.Key, data.position, data.position + data.direction * Scale, Color.blue);
+                renderer.DrawArc(data.position, data.position + data.direction, Vector3.up, data.roll, Scale, Color.green);
+            }
         }
     }
 }
