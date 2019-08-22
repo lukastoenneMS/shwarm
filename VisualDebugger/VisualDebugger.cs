@@ -10,6 +10,7 @@ namespace Shwarm.Vdb
     {
         public readonly VisualDebuggerFeature[] Features = new VisualDebuggerFeature[]
         {
+            new BoidIdsFeature(),
             new BoidPositionsFeature(),
             new BoidPathsFeature(),
             new BoidVelocityFeature(),
@@ -54,8 +55,9 @@ namespace Shwarm.Vdb
 
     public interface IVisualDebuggerRenderer
     {
-        void DrawPoint(int id, Vector3 p, float size, Color color);
-        void DrawLine(int id, Vector3 a, Vector3 b, Color color);
+        void DrawText(Vector3 position, string text, Color color);
+        void DrawPoint(Vector3 p, float size, Color color);
+        void DrawLine(Vector3 a, Vector3 b, Color color);
         void DrawLines(Vector3[] segments, Color color);
         void DrawArc(Vector3 center, Vector3 normal, Vector3 from, float angle, float radius, Color color);
     }
@@ -70,6 +72,21 @@ namespace Shwarm.Vdb
         public abstract void Render(VisualDebugger vdb, IVisualDebuggerRenderer renderer, int currentFrame);
     }
 
+    public class BoidIdsFeature : VisualDebuggerFeature
+    {
+        public override string Name => "Boid IDs";
+
+        public override void Render(VisualDebugger vdb, IVisualDebuggerRenderer renderer, int currentFrame)
+        {
+            Keyframe keyframe = vdb.GetKeyframe(currentFrame);
+
+            foreach (var blob in keyframe.data.blobs)
+            {
+                renderer.DrawText(blob.Value.boid.position + new Vector3(0, 0.02f, 0.0f), blob.Key.ToString(), Color.white);
+            }
+        }
+    }
+
     public class BoidPositionsFeature : VisualDebuggerFeature
     {
         public override string Name => "Boid Positions";
@@ -80,7 +97,7 @@ namespace Shwarm.Vdb
 
             foreach (var blob in keyframe.data.blobs)
             {
-                renderer.DrawPoint(blob.Key, blob.Value.boid.position, 0.01f, Color.white);
+                renderer.DrawPoint(blob.Value.boid.position, 0.01f, Color.white);
             }
         }
     }
@@ -154,7 +171,8 @@ namespace Shwarm.Vdb
 
             foreach (var blob in keyframe.data.blobs)
             {
-                renderer.DrawLine(blob.Key, blob.Value.boid.position, blob.Value.boid.position + blob.Value.boid.velocity * Scale, Color.yellow);
+                var boid = blob.Value.boid;
+                renderer.DrawLine(boid.position, boid.position + boid.velocity * Scale, Color.yellow);
             }
         }
     }
@@ -171,9 +189,9 @@ namespace Shwarm.Vdb
 
             foreach (var blob in keyframe.data.blobs)
             {
-                var data = blob.Value.boid;
-                renderer.DrawLine(blob.Key, data.position, data.position + data.direction * Scale, Color.blue);
-                renderer.DrawArc(data.position, data.position + data.direction, Vector3.up, data.roll, Scale, Color.green);
+                var boid = blob.Value.boid;
+                renderer.DrawLine(boid.position, boid.position + boid.direction * Scale, Color.blue);
+                renderer.DrawArc(boid.position, boid.position + boid.direction, Vector3.up, boid.roll, Scale, Color.green);
             }
         }
     }

@@ -17,6 +17,7 @@ namespace Shwarm.Vdb
 
         private static readonly Dictionary<System.Type, DrawFeatureGUI> drawFeatureGuiRegistry = new Dictionary<System.Type, DrawFeatureGUI>()
         {
+            { typeof(BoidIdsFeature), (editor, feature) => editor.DrawFeatureGUIImpl(feature as BoidIdsFeature) },
             { typeof(BoidPositionsFeature), (editor, feature) => editor.DrawFeatureGUIImpl(feature as BoidPositionsFeature) },
             { typeof(BoidPathsFeature), (editor, feature) => editor.DrawFeatureGUIImpl(feature as BoidPathsFeature) },
             { typeof(BoidVelocityFeature), (editor, feature) => editor.DrawFeatureGUIImpl(feature as BoidVelocityFeature) },
@@ -101,6 +102,10 @@ namespace Shwarm.Vdb
             return newFrame;
         }
 
+        private void DrawFeatureGUIImpl(BoidIdsFeature feature)
+        {
+        }
+
         private void DrawFeatureGUIImpl(BoidPositionsFeature feature)
         {
         }
@@ -142,13 +147,19 @@ namespace Shwarm.Vdb
             this.sceneView = sceneView;
         }
 
-        public void DrawPoint(int id, Vector3 p, float size, Color color)
+        public void DrawText(Vector3 position, string text, Color color)
         {
             Handles.color = color;
-            Handles.RectangleHandleCap(id, p, sceneView.rotation, size, EventType.Repaint);
+            Handles.Label(position, text);
         }
 
-        public void DrawLine(int id, Vector3 a, Vector3 b, Color color)
+        public void DrawPoint(Vector3 p, float size, Color color)
+        {
+            Handles.color = color;
+            Handles.RectangleHandleCap(0, p, sceneView.rotation, size, EventType.Repaint);
+        }
+
+        public void DrawLine(Vector3 a, Vector3 b, Color color)
         {
             Handles.color = color;
             Handles.DrawLine(a, b);

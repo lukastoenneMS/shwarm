@@ -58,11 +58,6 @@ namespace Boids
             return CombineHashCodes(new int[] {hashCodeA, hashCodeB, hashCodeC, hashCodeD});
         }
 
-        public static int GetBoidId(BoidParticle particle)
-        {
-            return CombineHashCodes("BoidParticle".GetHashCode(), particle.GetInstanceID());
-        }
-
         public static void SetTarget(BoidParticle particle, BoidState state, BoidTarget target)
         {
             if (!enableTarget || !particle.EnableDebugObjects)
@@ -94,7 +89,7 @@ namespace Boids
 
         public static void SetPhysics(BoidParticle particle, BoidState state, Vector3 force, Vector3 torque)
         {
-            recorder.RecordData(GetBoidId(particle), state);
+            recorder.RecordData(state.instanceID, state);
 
             if (!enablePhysics || !particle.EnableDebugObjects)
             {
