@@ -18,7 +18,14 @@ namespace Shwarm.Vdb
             public Vector3 angularVelocity;
         }
 
-        public BoidState boid;
+        public struct BoidTarget
+        {
+            public Vector3 direction;
+            public float speed;
+        }
+
+        public BoidState state;
+        public BoidTarget target;
     }
 
     internal class DataInstanceMap
@@ -27,14 +34,37 @@ namespace Shwarm.Vdb
 
         public void RecordData(int id, BoidState data)
         {
-            DataBlob blob = new DataBlob();
-            blob.boid.position = data.position;
-            blob.boid.velocity = data.velocity;
-            blob.boid.direction = data.direction;
-            blob.boid.roll = data.roll;
-            blob.boid.angularVelocity = data.angularVelocity;
+            DataBlob.BoidState state = new DataBlob.BoidState();
+            state.position = data.position;
+            state.velocity = data.velocity;
+            state.direction = data.direction;
+            state.roll = data.roll;
+            state.angularVelocity = data.angularVelocity;
 
+            DataBlob blob = GetDataBlob(id);
+            blob.state = state;
             blobs[id] = blob;
+        }
+
+        public void RecordData(int id, BoidTarget data)
+        {
+            DataBlob.BoidTarget target = new DataBlob.BoidTarget();
+            target.direction = data.direction;
+            target.speed = data.speed;
+
+            DataBlob blob = GetDataBlob(id);
+            blob.target = target;
+            blobs[id] = blob;
+        }
+
+        private DataBlob GetDataBlob(int id)
+        {
+            if (!blobs.TryGetValue(id, out DataBlob blob))
+            {
+                blob = new DataBlob();
+                blobs.Add(id, blob);
+            }
+            return blob;
         }
     }
 

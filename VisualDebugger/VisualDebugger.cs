@@ -16,6 +16,7 @@ namespace Shwarm.Vdb
             new BoidPathsFeature(),
             new BoidVelocityFeature() { Enabled=true },
             new BoidRotationFeature(),
+            new BoidTargetFeature(),
         };
 
         private readonly List<Keyframe> keyframes = new List<Keyframe>();
@@ -85,7 +86,7 @@ namespace Shwarm.Vdb
             {
                 if (filter(blob.Key))
                 {
-                    renderer.DrawText(blob.Value.boid.position + new Vector3(0, 0.02f, 0.0f), blob.Key.ToString(), Color.white);
+                    renderer.DrawText(blob.Value.state.position + new Vector3(0, 0.02f, 0.0f), blob.Key.ToString(), Color.white);
                 }
             }
         }
@@ -103,7 +104,7 @@ namespace Shwarm.Vdb
             {
                 if (filter(blob.Key))
                 {
-                    renderer.DrawPoint(blob.Value.boid.position, 0.01f, Color.white);
+                    renderer.DrawPoint(blob.Value.state.position, 0.01f, Color.white);
                 }
             }
         }
@@ -158,8 +159,8 @@ namespace Shwarm.Vdb
                     {
                         if (prevKeyframe.data.blobs.TryGetValue(blob.Key, out DataBlob prevData))
                         {
-                            segments[seg] = prevData.boid.position;
-                            segments[seg + 1] = blob.Value.boid.position;
+                            segments[seg] = prevData.state.position;
+                            segments[seg + 1] = blob.Value.state.position;
                             seg += 2;
                         }
                     }
@@ -186,8 +187,8 @@ namespace Shwarm.Vdb
             {
                 if (filter(blob.Key))
                 {
-                    var boid = blob.Value.boid;
-                    renderer.DrawLine(boid.position, boid.position + boid.velocity * Scale, Color.yellow);
+                    var state = blob.Value.state;
+                    renderer.DrawLine(state.position, state.position + state.velocity * Scale, Color.yellow);
                 }
             }
         }
@@ -207,9 +208,31 @@ namespace Shwarm.Vdb
             {
                 if (filter(blob.Key))
                 {
-                    var boid = blob.Value.boid;
-                    renderer.DrawLine(boid.position, boid.position + boid.direction * Scale, Color.blue);
-                    renderer.DrawArc(boid.position, boid.position + boid.direction, Vector3.up, boid.roll, Scale, Color.green);
+                    var state = blob.Value.state;
+                    renderer.DrawLine(state.position, state.position + state.direction * Scale, Color.blue);
+                    renderer.DrawArc(state.position, state.position + state.direction, Vector3.up, state.roll, Scale, Color.green);
+                }
+            }
+        }
+    }
+
+    public class BoidTargetFeature : VisualDebuggerFeature
+    {
+        public override string Name => "Boid Targets";
+
+        public float Scale = 1.0f;
+
+        public override void Render(VisualDebugger vdb, IVisualDebuggerRenderer renderer, int currentFrame, Predicate<int> filter)
+        {
+            Keyframe keyframe = vdb.GetKeyframe(currentFrame);
+
+            foreach (var blob in keyframe.data.blobs)
+            {
+                if (filter(blob.Key))
+                {
+                    var state = blob.Value.state;
+                    var target = blob.Value.target;
+                    renderer.DrawLine(state.position, state.position + target.direction * Scale, Color.cyan);
                 }
             }
         }

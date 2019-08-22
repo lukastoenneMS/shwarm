@@ -60,6 +60,8 @@ namespace Boids
 
         public static void SetTarget(BoidParticle particle, BoidState state, BoidTarget target)
         {
+            recorder.RecordData(state.instanceID, target);
+
             if (!enableTarget || !particle.EnableDebugObjects)
             {
                 return;

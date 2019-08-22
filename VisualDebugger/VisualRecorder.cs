@@ -33,5 +33,13 @@ namespace Shwarm.Vdb
                 keyframe.data.RecordData(id, data);
             }
         }
+
+        public void RecordData(int id, BoidTarget data)
+        {
+            if (keyframe != null)
+            {
+                keyframe.data.RecordData(id, data);
+            }
+        }
     }
 }

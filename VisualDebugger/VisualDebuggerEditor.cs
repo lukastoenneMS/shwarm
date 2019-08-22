@@ -39,6 +39,7 @@ namespace Shwarm.Vdb
             { typeof(BoidPathsFeature), (editor, feature) => editor.DrawFeatureGUIImpl(feature as BoidPathsFeature) },
             { typeof(BoidVelocityFeature), (editor, feature) => editor.DrawFeatureGUIImpl(feature as BoidVelocityFeature) },
             { typeof(BoidRotationFeature), (editor, feature) => editor.DrawFeatureGUIImpl(feature as BoidRotationFeature) },
+            { typeof(BoidTargetFeature), (editor, feature) => editor.DrawFeatureGUIImpl(feature as BoidTargetFeature) },
         };
 
         void OnEnable()
@@ -211,6 +212,11 @@ namespace Shwarm.Vdb
         }
 
         private void DrawFeatureGUIImpl(BoidRotationFeature feature)
+        {
+            feature.Scale = EditorGUILayout.Slider("Scale", feature.Scale, 0.0f, 1.0f);
+        }
+
+        private void DrawFeatureGUIImpl(BoidTargetFeature feature)
         {
             feature.Scale = EditorGUILayout.Slider("Scale", feature.Scale, 0.0f, 1.0f);
         }
