@@ -3,20 +3,25 @@
 
 using UnityEngine;
 using UnityEditor;
+using System.Collections.Generic;
 
 namespace Shwarm.Vdb
 {
     [CustomEditor(typeof(VisualDebuggerComponent))]
     public class VisualDebuggerEditor : Editor
     {
-        private SerializedProperty currentFrame;
-
         private VisualDebugger vdb;
         private VisualDebuggerComponent component;
 
+        private delegate void DrawFeatureGUI(VisualDebuggerEditor editor, VisualDebuggerFeature feature);
+
+        private static readonly Dictionary<System.Type, DrawFeatureGUI> drawFeatureGuiRegistry = new Dictionary<System.Type, DrawFeatureGUI>()
+        {
+            { typeof(BoidPathsFeature), (editor, feature) => editor.DrawFeatureGUIImpl(feature as BoidPathsFeature) },
+        };
+
         void OnEnable()
         {
-            currentFrame = serializedObject.FindProperty ("currentFrame");
             vdb = VisualDebugger.Instance;
             component = target as VisualDebuggerComponent;
         }
@@ -55,6 +60,24 @@ namespace Shwarm.Vdb
                 DrawKeyframeSlider();
             }
 
+
+            foreach (var feature in vdb.Features)
+            {
+                EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+                bool newEnabled = EditorGUILayout.Toggle(feature.Name, feature.Enabled);
+                EditorGUILayout.EndVertical();
+
+                if (newEnabled != feature.Enabled)
+                {
+                    feature.Enabled = newEnabled;
+                }
+
+                if (drawFeatureGuiRegistry.TryGetValue(feature.GetType(), out DrawFeatureGUI guiFn))
+                {
+                    guiFn(this, feature);
+                }
+            }
+
             serializedObject.ApplyModifiedProperties ();
         }
 
@@ -69,6 +92,12 @@ namespace Shwarm.Vdb
             GUILayout.EndHorizontal();
 
             return newFrame;
+        }
+
+        private void DrawFeatureGUIImpl(BoidPathsFeature feature)
+        {
+            feature.FramesBeforeCurrent = EditorGUILayout.IntField("Frames Before Current", feature.FramesBeforeCurrent);
+            feature.FramesAfterCurrent = EditorGUILayout.IntField("Frames After Current", feature.FramesAfterCurrent);
         }
 
         void OnSceneGUI()
@@ -93,7 +122,17 @@ namespace Shwarm.Vdb
         public void DrawPoint(int id, Vector3 p, float size)
         {
             Handles.RectangleHandleCap(id, p, sceneView.rotation, size, EventType.Repaint);
-            // Handles.DrawLine(Vector3.zero, p);
+        }
+
+        public void DrawLine(int id, Vector3 a, Vector3 b)
+        {
+            Handles.DrawLine(a, b);
+        }
+
+        public void DrawLines(Vector3[] segments)
+        {
+            Debug.Assert((segments.Length & 1) == 0, "Segments list must have an even number of points");
+            Handles.DrawLines(segments);
         }
     }
 }
