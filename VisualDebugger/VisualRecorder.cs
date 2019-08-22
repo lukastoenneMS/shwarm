@@ -16,6 +16,7 @@ namespace Shwarm.Vdb
 
         public int CommitKeyframe()
         {
+            UnityEngine.Debug.Log($"keyframe: {keyframe.data.blobs.Count}");
             VisualDebugger.Instance.AddKeyframe(keyframe);
             keyframe = null;
             return VisualDebugger.Instance.NumKeyframes - 1;

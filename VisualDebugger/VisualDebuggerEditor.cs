@@ -25,6 +25,15 @@ namespace Shwarm.Vdb
         {
             serializedObject.Update();
 
+            MonoScript monoScript = MonoScript.FromMonoBehaviour(component);
+            int currentExecutionOrder = MonoImporter.GetExecutionOrder(monoScript);
+            int newExecutionOrder = EditorGUILayout.IntField("Execution Order", currentExecutionOrder);
+
+            if (newExecutionOrder != currentExecutionOrder)
+            {
+                MonoImporter.SetExecutionOrder(monoScript, newExecutionOrder);
+            }
+
             if (!Application.isPlaying)
             {
                 int newFrame = DrawKeyframeSlider();
@@ -54,8 +63,9 @@ namespace Shwarm.Vdb
             int maxFrame = Mathf.Max(vdb.NumKeyframes - 1, 0);
 
             GUILayout.BeginHorizontal();
-            int newFrame = EditorGUILayout.IntSlider(component.CurrentFrame, 0, maxFrame);
-            EditorGUILayout.LabelField($"/ {vdb.NumKeyframes}", GUILayout.ExpandWidth(false));
+            int newFrame = EditorGUILayout.IntSlider("Frame", component.CurrentFrame, 0, maxFrame);
+            // TODO how to make this shrink?
+            // EditorGUILayout.LabelField($"/ {vdb.NumKeyframes}", GUILayout.ExpandWidth(false));
             GUILayout.EndHorizontal();
 
             return newFrame;
@@ -63,8 +73,11 @@ namespace Shwarm.Vdb
 
         void OnSceneGUI()
         {
-            SceneGUIRenderer renderer = new SceneGUIRenderer(SceneView.lastActiveSceneView);
-            vdb.Render(renderer, component.CurrentFrame);
+            if (Event.current.type == EventType.Repaint)
+            {
+                SceneGUIRenderer renderer = new SceneGUIRenderer(SceneView.lastActiveSceneView);
+                vdb.Render(renderer, component.CurrentFrame);
+            }
         }
     }
 
@@ -79,7 +92,7 @@ namespace Shwarm.Vdb
 
         public void DrawPoint(int id, Vector3 p, float size)
         {
-            Handles.RectangleHandleCap(id, p, sceneView.rotation, size, EventType.Ignore);
+            Handles.RectangleHandleCap(id, p, sceneView.rotation, size, EventType.Repaint);
             // Handles.DrawLine(Vector3.zero, p);
         }
     }

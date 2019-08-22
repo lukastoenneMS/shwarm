@@ -26,7 +26,7 @@ namespace Shwarm.Vdb
             recorder.BeginKeyframe();
         }
 
-        void LateUpdate()
+        void FixedUpdate()
         {
             currentFrame = recorder.CommitKeyframe();
 
