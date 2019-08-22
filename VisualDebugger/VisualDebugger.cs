@@ -12,9 +12,9 @@ namespace Shwarm.Vdb
         public readonly VisualDebuggerFeature[] Features = new VisualDebuggerFeature[]
         {
             new BoidIdsFeature(),
-            new BoidPositionsFeature(),
+            new BoidPositionsFeature() { Enabled=true },
             new BoidPathsFeature(),
-            new BoidVelocityFeature(),
+            new BoidVelocityFeature() { Enabled=true },
             new BoidRotationFeature(),
         };
 
