@@ -3,6 +3,7 @@
 
 using UnityEngine;
 using UnityEditor;
+using System;
 using System.Collections.Generic;
 
 namespace Shwarm.Vdb
@@ -14,6 +15,22 @@ namespace Shwarm.Vdb
         private VisualDebuggerComponent component;
 
         private delegate void DrawFeatureGUI(VisualDebuggerEditor editor, VisualDebuggerFeature feature);
+
+        private bool showFilter = false;
+        private bool showItemList = false;
+        private Vector2 itemListScroll = Vector2.zero;
+        private int selection = 0;
+
+        enum FilterMode
+        {
+            None,
+            Solo,
+            Mute,
+        }
+
+        private readonly HashSet<int> filterIds = new HashSet<int>();
+        private FilterMode filterMode = FilterMode.Solo;
+        private static readonly string[] filterNames = Enum.GetNames(typeof(FilterMode));
 
         private static readonly Dictionary<System.Type, DrawFeatureGUI> drawFeatureGuiRegistry = new Dictionary<System.Type, DrawFeatureGUI>()
         {
@@ -64,7 +81,6 @@ namespace Shwarm.Vdb
                 DrawKeyframeSlider();
             }
 
-
             foreach (var feature in vdb.Features)
             {
                 EditorGUILayout.BeginVertical(EditorStyles.helpBox);
@@ -86,7 +102,43 @@ namespace Shwarm.Vdb
                 }
             }
 
-            serializedObject.ApplyModifiedProperties ();
+            showFilter = EditorGUILayout.Foldout(showFilter, "Filter");
+            if (showFilter)
+            {
+                EditorGUILayout.BeginHorizontal();
+                bool setFilter = GUILayout.Button("Set");
+                bool addFilter = GUILayout.Button("Add");
+                bool clearFilter = GUILayout.Button("Clear");
+                EditorGUILayout.EndHorizontal();
+
+                if (setFilter)
+                {
+                    filterIds.Clear();
+                    if (selection != 0)
+                    {
+                        filterIds.Add(selection);
+                    }
+                }
+                if (addFilter)
+                {
+                    if (selection != 0)
+                    {
+                        filterIds.Add(selection);
+                    }
+                }
+                if (clearFilter)
+                {
+                    filterIds.Clear();
+                }
+
+                filterMode = (FilterMode)GUILayout.SelectionGrid((int)filterMode, filterNames, filterNames.Length);
+            }
+
+            DrawItems();
+
+            if (GUI.changed) {
+                serializedObject.ApplyModifiedProperties();
+            }
         }
 
         private int DrawKeyframeSlider()
@@ -100,6 +152,43 @@ namespace Shwarm.Vdb
             GUILayout.EndHorizontal();
 
             return newFrame;
+        }
+
+        private void DrawItems()
+        {
+            showItemList = EditorGUILayout.Foldout(showItemList, "Items");
+            if (!showItemList)
+            {
+                return;
+            }
+            if (component.CurrentFrame < 0 || component.CurrentFrame >= vdb.NumKeyframes)
+            {
+                return;
+            }
+
+            Keyframe keyframe = vdb.GetKeyframe(component.CurrentFrame);
+
+            itemListScroll = GUILayout.BeginScrollView(itemListScroll);
+            EditorGUI.indentLevel = 1;
+
+            foreach (var blob in keyframe.data.blobs)
+            {
+                GUI.SetNextControlName("id" + blob.Key);
+                EditorGUILayout.SelectableLabel(blob.Key.ToString(), GUILayout.Height(18));
+            }
+
+            string selectedName = GUI.GetNameOfFocusedControl();
+            if (selectedName.StartsWith("id"))
+            {
+                string idName = selectedName.Substring("id".Length);
+                if (int.TryParse(idName, out int id))
+                {
+                    selection = id;
+                }
+            }
+
+            GUILayout.EndScrollView();
+            EditorGUI.indentLevel = 0;
         }
 
         private void DrawFeatureGUIImpl(BoidIdsFeature feature)
@@ -133,8 +222,29 @@ namespace Shwarm.Vdb
                 Handles.zTest = UnityEngine.Rendering.CompareFunction.LessEqual;
 
                 SceneGUIRenderer renderer = new SceneGUIRenderer(SceneView.lastActiveSceneView);
-                vdb.Render(renderer, component.CurrentFrame);
+                vdb.Render(renderer, component.CurrentFrame, IdFilterPredicate);
             }
+        }
+
+        bool IdFilterPredicate(int id)
+        {
+            if (filterIds.Count == 0)
+            {
+                return true;
+            }
+
+            switch (filterMode)
+            {
+                case FilterMode.None:
+                    return true;
+
+                case FilterMode.Solo:
+                    return filterIds.Contains(id);
+
+                case FilterMode.Mute:
+                    return !filterIds.Contains(id);
+            }
+            return false;
         }
     }
 

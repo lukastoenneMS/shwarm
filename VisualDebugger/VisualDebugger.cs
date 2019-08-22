@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -36,7 +37,7 @@ namespace Shwarm.Vdb
             keyframes.Clear();
         }
 
-        public void Render(IVisualDebuggerRenderer renderer, int currentFrame)
+        public void Render(IVisualDebuggerRenderer renderer, int currentFrame, Predicate<int> filter)
         {
             if (currentFrame < 0 || currentFrame >= keyframes.Count)
             {
@@ -47,7 +48,7 @@ namespace Shwarm.Vdb
             {
                 if (feature.Enabled)
                 {
-                    feature.Render(this, renderer, currentFrame);
+                    feature.Render(this, renderer, currentFrame, filter);
                 }
             }
         }
@@ -69,20 +70,23 @@ namespace Shwarm.Vdb
         private bool enabled = false;
         public bool Enabled { get => enabled; set => enabled = value; }
 
-        public abstract void Render(VisualDebugger vdb, IVisualDebuggerRenderer renderer, int currentFrame);
+        public abstract void Render(VisualDebugger vdb, IVisualDebuggerRenderer renderer, int currentFrame, Predicate<int> filter);
     }
 
     public class BoidIdsFeature : VisualDebuggerFeature
     {
         public override string Name => "Boid IDs";
 
-        public override void Render(VisualDebugger vdb, IVisualDebuggerRenderer renderer, int currentFrame)
+        public override void Render(VisualDebugger vdb, IVisualDebuggerRenderer renderer, int currentFrame, Predicate<int> filter)
         {
             Keyframe keyframe = vdb.GetKeyframe(currentFrame);
 
             foreach (var blob in keyframe.data.blobs)
             {
-                renderer.DrawText(blob.Value.boid.position + new Vector3(0, 0.02f, 0.0f), blob.Key.ToString(), Color.white);
+                if (filter(blob.Key))
+                {
+                    renderer.DrawText(blob.Value.boid.position + new Vector3(0, 0.02f, 0.0f), blob.Key.ToString(), Color.white);
+                }
             }
         }
     }
@@ -91,13 +95,16 @@ namespace Shwarm.Vdb
     {
         public override string Name => "Boid Positions";
 
-        public override void Render(VisualDebugger vdb, IVisualDebuggerRenderer renderer, int currentFrame)
+        public override void Render(VisualDebugger vdb, IVisualDebuggerRenderer renderer, int currentFrame, Predicate<int> filter)
         {
             Keyframe keyframe = vdb.GetKeyframe(currentFrame);
 
             foreach (var blob in keyframe.data.blobs)
             {
-                renderer.DrawPoint(blob.Value.boid.position, 0.01f, Color.white);
+                if (filter(blob.Key))
+                {
+                    renderer.DrawPoint(blob.Value.boid.position, 0.01f, Color.white);
+                }
             }
         }
     }
@@ -109,7 +116,7 @@ namespace Shwarm.Vdb
         public int FramesBeforeCurrent = -1;
         public int FramesAfterCurrent = -1;
 
-        public override void Render(VisualDebugger vdb, IVisualDebuggerRenderer renderer, int currentFrame)
+        public override void Render(VisualDebugger vdb, IVisualDebuggerRenderer renderer, int currentFrame, Predicate<int> filter)
         {
             int numFrames = vdb.NumKeyframes;
             int firstFrame = FramesBeforeCurrent >= 0 ? Mathf.Max(0, currentFrame - FramesBeforeCurrent) : 0;
@@ -126,9 +133,12 @@ namespace Shwarm.Vdb
                 Keyframe keyframe = vdb.GetKeyframe(frame);
                 foreach (var blob in keyframe.data.blobs)
                 {
-                    if (prevKeyframe.data.blobs.TryGetValue(blob.Key, out DataBlob prevData))
+                    if (filter(blob.Key))
                     {
-                        numSegments += 2;
+                        if (prevKeyframe.data.blobs.TryGetValue(blob.Key, out DataBlob prevData))
+                        {
+                            numSegments += 2;
+                        }
                     }
                 }
 
@@ -144,11 +154,14 @@ namespace Shwarm.Vdb
                 Keyframe keyframe = vdb.GetKeyframe(frame);
                 foreach (var blob in keyframe.data.blobs)
                 {
-                    if (prevKeyframe.data.blobs.TryGetValue(blob.Key, out DataBlob prevData))
+                    if (filter(blob.Key))
                     {
-                        segments[seg] = prevData.boid.position;
-                        segments[seg + 1] = blob.Value.boid.position;
-                        seg += 2;
+                        if (prevKeyframe.data.blobs.TryGetValue(blob.Key, out DataBlob prevData))
+                        {
+                            segments[seg] = prevData.boid.position;
+                            segments[seg + 1] = blob.Value.boid.position;
+                            seg += 2;
+                        }
                     }
                 }
 
@@ -165,14 +178,17 @@ namespace Shwarm.Vdb
 
         public float Scale = 1.0f;
 
-        public override void Render(VisualDebugger vdb, IVisualDebuggerRenderer renderer, int currentFrame)
+        public override void Render(VisualDebugger vdb, IVisualDebuggerRenderer renderer, int currentFrame, Predicate<int> filter)
         {
             Keyframe keyframe = vdb.GetKeyframe(currentFrame);
 
             foreach (var blob in keyframe.data.blobs)
             {
-                var boid = blob.Value.boid;
-                renderer.DrawLine(boid.position, boid.position + boid.velocity * Scale, Color.yellow);
+                if (filter(blob.Key))
+                {
+                    var boid = blob.Value.boid;
+                    renderer.DrawLine(boid.position, boid.position + boid.velocity * Scale, Color.yellow);
+                }
             }
         }
     }
@@ -183,15 +199,18 @@ namespace Shwarm.Vdb
 
         public float Scale = 1.0f;
 
-        public override void Render(VisualDebugger vdb, IVisualDebuggerRenderer renderer, int currentFrame)
+        public override void Render(VisualDebugger vdb, IVisualDebuggerRenderer renderer, int currentFrame, Predicate<int> filter)
         {
             Keyframe keyframe = vdb.GetKeyframe(currentFrame);
 
             foreach (var blob in keyframe.data.blobs)
             {
-                var boid = blob.Value.boid;
-                renderer.DrawLine(boid.position, boid.position + boid.direction * Scale, Color.blue);
-                renderer.DrawArc(boid.position, boid.position + boid.direction, Vector3.up, boid.roll, Scale, Color.green);
+                if (filter(blob.Key))
+                {
+                    var boid = blob.Value.boid;
+                    renderer.DrawLine(boid.position, boid.position + boid.direction * Scale, Color.blue);
+                    renderer.DrawArc(boid.position, boid.position + boid.direction, Vector3.up, boid.roll, Scale, Color.green);
+                }
             }
         }
     }
