@@ -103,6 +103,29 @@ namespace Shwarm.Vdb
                 }
             }
 
+            DrawFilter();
+            DrawItems();
+
+            if (GUI.changed) {
+                serializedObject.ApplyModifiedProperties();
+            }
+        }
+
+        private int DrawKeyframeSlider()
+        {
+            int maxFrame = Mathf.Max(vdb.NumKeyframes - 1, 0);
+
+            GUILayout.BeginHorizontal();
+            int newFrame = EditorGUILayout.IntSlider("Frame", component.CurrentFrame, 0, maxFrame);
+            // TODO how to make this shrink?
+            // EditorGUILayout.LabelField($"/ {vdb.NumKeyframes}", GUILayout.ExpandWidth(false));
+            GUILayout.EndHorizontal();
+
+            return newFrame;
+        }
+
+        private void DrawFilter()
+        {
             showFilter = EditorGUILayout.Foldout(showFilter, "Filter");
             if (showFilter)
             {
@@ -133,26 +156,9 @@ namespace Shwarm.Vdb
                 }
 
                 filterMode = (FilterMode)GUILayout.SelectionGrid((int)filterMode, filterNames, filterNames.Length);
+
+                EditorGUILayout.LabelField("IDs: " + string.Join(" ", filterIds));
             }
-
-            DrawItems();
-
-            if (GUI.changed) {
-                serializedObject.ApplyModifiedProperties();
-            }
-        }
-
-        private int DrawKeyframeSlider()
-        {
-            int maxFrame = Mathf.Max(vdb.NumKeyframes - 1, 0);
-
-            GUILayout.BeginHorizontal();
-            int newFrame = EditorGUILayout.IntSlider("Frame", component.CurrentFrame, 0, maxFrame);
-            // TODO how to make this shrink?
-            // EditorGUILayout.LabelField($"/ {vdb.NumKeyframes}", GUILayout.ExpandWidth(false));
-            GUILayout.EndHorizontal();
-
-            return newFrame;
         }
 
         private void DrawItems()
@@ -223,12 +229,15 @@ namespace Shwarm.Vdb
 
         void OnSceneGUI()
         {
-            if (Event.current.type == EventType.Repaint)
-            {
-                Handles.zTest = UnityEngine.Rendering.CompareFunction.LessEqual;
+            Handles.zTest = UnityEngine.Rendering.CompareFunction.LessEqual;
 
-                SceneGUIRenderer renderer = new SceneGUIRenderer(SceneView.lastActiveSceneView);
-                vdb.Render(renderer, component.CurrentFrame, IdFilterPredicate);
+            SceneGUIRenderer renderer = new SceneGUIRenderer(SceneView.lastActiveSceneView, selection);
+            bool onlyPoints = (Event.current.type != EventType.Repaint);
+            vdb.Render(renderer, component.CurrentFrame, IdFilterPredicate, onlyPoints);
+
+            if (renderer.Selection != selection)
+            {
+                selection = renderer.Selection;
             }
         }
 
@@ -256,11 +265,14 @@ namespace Shwarm.Vdb
 
     internal class SceneGUIRenderer : IVisualDebuggerRenderer
     {
-        SceneView sceneView;
+        private SceneView sceneView;
+        private int selection;
+        public int Selection => selection;
 
-        public SceneGUIRenderer(SceneView sceneView)
+        public SceneGUIRenderer(SceneView sceneView, int selection)
         {
             this.sceneView = sceneView;
+            this.selection = selection;
         }
 
         public void DrawText(Vector3 position, string text, Color color)
@@ -269,10 +281,13 @@ namespace Shwarm.Vdb
             Handles.Label(position, text);
         }
 
-        public void DrawPoint(Vector3 p, float size, Color color)
+        public void DrawPoint(int id, Vector3 position, float size, float pickSize, Color color, Color selectionColor)
         {
-            Handles.color = color;
-            Handles.RectangleHandleCap(0, p, sceneView.rotation, size, EventType.Repaint);
+            Handles.color = (id == selection ? selectionColor : color);
+            if (Handles.Button(position, sceneView.rotation, size, pickSize, Handles.DotHandleCap))
+            {
+                selection = id;
+            }
         }
 
         public void DrawLine(Vector3 a, Vector3 b, Color color)

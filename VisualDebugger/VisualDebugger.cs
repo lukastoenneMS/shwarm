@@ -38,7 +38,7 @@ namespace Shwarm.Vdb
             keyframes.Clear();
         }
 
-        public void Render(IVisualDebuggerRenderer renderer, int currentFrame, Predicate<int> filter)
+        public void Render(IVisualDebuggerRenderer renderer, int currentFrame, Predicate<int> filter, bool onlyPoints)
         {
             if (currentFrame < 0 || currentFrame >= keyframes.Count)
             {
@@ -47,6 +47,11 @@ namespace Shwarm.Vdb
 
             foreach (var feature in Features)
             {
+                if (onlyPoints && !(feature is BoidPositionsFeature))
+                {
+                    continue;
+                }
+
                 if (feature.Enabled)
                 {
                     feature.Render(this, renderer, currentFrame, filter);
@@ -58,7 +63,7 @@ namespace Shwarm.Vdb
     public interface IVisualDebuggerRenderer
     {
         void DrawText(Vector3 position, string text, Color color);
-        void DrawPoint(Vector3 p, float size, Color color);
+        void DrawPoint(int id, Vector3 position, float size, float pickSize, Color color, Color selectionColor);
         void DrawLine(Vector3 a, Vector3 b, Color color);
         void DrawLines(Vector3[] segments, Color color);
         void DrawArc(Vector3 center, Vector3 normal, Vector3 from, float angle, float radius, Color color);
@@ -104,7 +109,7 @@ namespace Shwarm.Vdb
             {
                 if (filter(blob.Key))
                 {
-                    renderer.DrawPoint(blob.Value.state.position, 0.01f, Color.white);
+                    renderer.DrawPoint(blob.Key, blob.Value.state.position, 0.01f, 0.02f, Color.white, new Color(1.0f, 0.5f, 0.0f));
                 }
             }
         }
