@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using UnityEngine;
 using Utils;
 
 namespace Grid
@@ -23,6 +22,10 @@ namespace Grid
         public static GridIndex BlockToGridIndex(BlockIndex blockIndex)
         {
             return new GridIndex(blockIndex.i << BlockIndexShift, blockIndex.j << BlockIndexShift, blockIndex.k << BlockIndexShift);
+        }
+        public static GridIndex BlockToGridIndex(BlockIndex blockIndex, GridIndex localIndex)
+        {
+            return BlockToGridIndex(blockIndex) + localIndex;
         }
         public static GridIndex BlockToGridIndex(BlockIndex blockIndex, int cellIndex)
         {
@@ -110,11 +113,41 @@ namespace Grid
 
     public class GridBlock<T>
     {
+        // TODO use Unity NativeArray here (or move to C++ ...)
+        public readonly byte[] active;
         public readonly T[] cells;
 
         public GridBlock()
         {
+            active = new byte[IndexDetails.BlockSize3 >> 3];
             cells = new T[IndexDetails.BlockSize3];
+        }
+
+        public bool GetActive(int cellIndex)
+        {
+            return (active[cellIndex >> 3] & (byte)(1 << (cellIndex & 0xFF))) != 0;
+        }
+
+        public T GetValue(int cellIndex)
+        {
+            return cells[cellIndex];
+        }
+
+        public void GetValue(int cellIndex, out T value, out bool isActive)
+        {
+            value = GetValue(cellIndex);
+            isActive = GetActive(cellIndex);
+        }
+
+        public void SetValue(int cellIndex, T value)
+        {
+            cells[cellIndex] = value;
+            active[cellIndex >> 3] |= (byte)(1 << (cellIndex & 0xFF));
+        }
+
+        public void Deactivate(int cellIndex)
+        {
+            active[cellIndex >> 3] &= (byte)(~(1 << (cellIndex & 0xFF)));
         }
     }
 
@@ -122,11 +155,26 @@ namespace Grid
     {
         private Dictionary<BlockIndex, GridBlock<T>> blocks;
         internal Dictionary<BlockIndex, GridBlock<T>> Blocks => blocks;
+
+        internal bool TryGetBlock(BlockIndex blockIndex, out GridBlock<T> block)
+        {
+            return blocks.TryGetValue(blockIndex, out block);
+        }
+
+        internal GridBlock<T> GetOrCreateBlock(BlockIndex blockIndex)
+        {
+            if (!blocks.TryGetValue(blockIndex, out GridBlock<T> block))
+            {
+                block = new GridBlock<T>();
+                blocks.Add(blockIndex, block);
+            }
+            return block;
+        }
     }
 
-    public static class GridIterator<T>
+    public static class GridIterator
     {
-        public static IEnumerator<Tuple<GridIndex, T>> GetCells(Grid<T> grid)
+        public static IEnumerator<Tuple<GridIndex, T>> GetCells<T>(Grid<T> grid)
         {
             foreach (var blockItem in grid.Blocks)
             {
@@ -138,6 +186,83 @@ namespace Grid
                     yield return Tuple.Create(gridIndex, blockItem.Value.cells[i]);
                 }
             }
+        }
+    }
+
+    public class GridAccessor<T>
+    {
+        private Grid<T> grid;
+
+        public GridAccessor(Grid<T> grid)
+        {
+            this.grid = grid;
+        }
+
+        public bool GetActive(GridIndex index)
+        {
+            BlockIndex blockIndex = IndexDetails.GridToBlockIndex(index, out int cellIndex);
+            if (grid.TryGetBlock(blockIndex, out GridBlock<T> block))
+            {
+                return block.GetActive(cellIndex);
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        public T GetValue(GridIndex index)
+        {
+            BlockIndex blockIndex = IndexDetails.GridToBlockIndex(index, out int cellIndex);
+            if (grid.TryGetBlock(blockIndex, out GridBlock<T> block))
+            {
+                return block.GetValue(cellIndex);
+            }
+            else
+            {
+                return default(T);
+            }
+        }
+
+        public void GetValue(GridIndex index, out T value, out bool isActive)
+        {
+            BlockIndex blockIndex = IndexDetails.GridToBlockIndex(index, out int cellIndex);
+            if (grid.TryGetBlock(blockIndex, out GridBlock<T> block))
+            {
+                block.GetValue(cellIndex, out value, out isActive);
+            }
+            else
+            {
+                value = default(T);
+                isActive = false;
+            }
+        }
+
+        public void SetValue(GridIndex index, T value)
+        {
+            BlockIndex blockIndex = IndexDetails.GridToBlockIndex(index, out int cellIndex);
+            GridBlock<T> block = grid.GetOrCreateBlock(blockIndex);
+
+            block.SetValue(cellIndex, value);
+        }
+
+        public void Deactivate(GridIndex index)
+        {
+            BlockIndex blockIndex = IndexDetails.GridToBlockIndex(index, out int cellIndex);
+            if (grid.TryGetBlock(blockIndex, out GridBlock<T> block))
+            {
+                block.Deactivate(cellIndex);
+            }
+        }
+    }
+
+    public static class RandomGridGenerator
+    {
+        public static Grid<T> Generate<T>(int[] size)
+        {
+            var grid = new Grid<T>();
+            
+            return grid;
         }
     }
 }
