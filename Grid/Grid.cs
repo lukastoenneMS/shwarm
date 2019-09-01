@@ -12,12 +12,12 @@ namespace Grid
         public const int BlockSize = 16;
         public const int BlockSize2 = 256;
         public const int BlockSize3 = 4096;
+        public const int BlockIndexMask = 0x0000000F;
+        public const int BlockIndexMask2 = 0x000000FF;
+        public const int BlockIndexMask3 = 0x00000FFF;
         public const int BlockIndexShift = 4;
         public const int BlockIndexShift2 = 8;
         public const int BlockIndexShift3 = 12;
-        public const int BlockIndexMask = ~0x0000000F;
-        public const int BlockIndexMask2 = ~0x000000FF;
-        public const int BlockIndexMask3 = ~0x00000FFF;
 
         public static GridIndex BlockToGridIndex(BlockIndex blockIndex)
         {
@@ -113,22 +113,29 @@ namespace Grid
 
     public class GridBlock<T>
     {
-        private const int ActiveTypeMask = 0xFF;
-        private const int ActiveTypeShift = 3;
+        private const int ActiveTypeMask = 0x1f;
+        private const int ActiveTypeShift = 5;
 
         // TODO use Unity NativeArray here (or move to C++ ...)
-        public readonly byte[] active;
+        public readonly int[] active;
         public readonly T[] cells;
+
+        private int activeCount;
+        public int ActiveCount => activeCount;
 
         public GridBlock()
         {
-            active = new byte[IndexDetails.BlockSize3 >> 3];
+            active = new int[IndexDetails.BlockSize3 >> 3];
+            activeCount = 0;
             cells = new T[IndexDetails.BlockSize3];
         }
 
         public bool GetActive(int cellIndex)
         {
-            return (active[cellIndex >> ActiveTypeShift] & (byte)(1 << (cellIndex & ActiveTypeMask))) != 0;
+            int activeIndex = cellIndex >> ActiveTypeShift;
+            int activeMask = 1 << (cellIndex & ActiveTypeMask);
+            int currentActiveBits = active[activeIndex] & activeMask;
+            return currentActiveBits != 0;
         }
 
         public T GetValue(int cellIndex)
@@ -145,12 +152,21 @@ namespace Grid
         public void SetValue(int cellIndex, T value)
         {
             cells[cellIndex] = value;
-            active[cellIndex >> ActiveTypeShift] |= (byte)(1 << (cellIndex & ActiveTypeMask));
+
+            int activeIndex = cellIndex >> ActiveTypeShift;
+            int activeMask = 1 << (cellIndex & ActiveTypeMask);
+            int currentActiveBits = active[activeIndex] & activeMask;
+            activeCount = (currentActiveBits == 0 ? activeCount + 1 : activeCount);
+            active[activeIndex] = currentActiveBits | activeMask;
         }
 
         public void Deactivate(int cellIndex)
         {
-            active[cellIndex >> ActiveTypeShift] &= (byte)(~(1 << (cellIndex & ActiveTypeMask)));
+            int activeIndex = cellIndex >> ActiveTypeShift;
+            int activeMask = 1 << (cellIndex & ActiveTypeMask);
+            int currentActiveBits = active[activeIndex] & activeMask;
+            activeCount = (currentActiveBits == 0 ? activeCount : activeCount - 1);
+            active[activeIndex] = currentActiveBits & ~activeMask;
         }
     }
 
@@ -162,6 +178,11 @@ namespace Grid
         public Grid()
         {
             blocks = new Dictionary<BlockIndex, GridBlock<T>>();
+        }
+
+        public GridAccessor<T> GetAccessor()
+        {
+            return new GridAccessor<T>(this);
         }
 
         internal bool TryGetBlock(BlockIndex blockIndex, out GridBlock<T> block)
