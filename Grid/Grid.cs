@@ -113,6 +113,9 @@ namespace Grid
 
     public class GridBlock<T>
     {
+        private const int ActiveTypeMask = 0xFF;
+        private const int ActiveTypeShift = 3;
+
         // TODO use Unity NativeArray here (or move to C++ ...)
         public readonly byte[] active;
         public readonly T[] cells;
@@ -125,7 +128,7 @@ namespace Grid
 
         public bool GetActive(int cellIndex)
         {
-            return (active[cellIndex >> 3] & (byte)(1 << (cellIndex & 0xFF))) != 0;
+            return (active[cellIndex >> ActiveTypeShift] & (byte)(1 << (cellIndex & ActiveTypeMask))) != 0;
         }
 
         public T GetValue(int cellIndex)
@@ -142,19 +145,24 @@ namespace Grid
         public void SetValue(int cellIndex, T value)
         {
             cells[cellIndex] = value;
-            active[cellIndex >> 3] |= (byte)(1 << (cellIndex & 0xFF));
+            active[cellIndex >> ActiveTypeShift] |= (byte)(1 << (cellIndex & ActiveTypeMask));
         }
 
         public void Deactivate(int cellIndex)
         {
-            active[cellIndex >> 3] &= (byte)(~(1 << (cellIndex & 0xFF)));
+            active[cellIndex >> ActiveTypeShift] &= (byte)(~(1 << (cellIndex & ActiveTypeMask)));
         }
     }
 
     public class Grid<T>
     {
-        private Dictionary<BlockIndex, GridBlock<T>> blocks;
+        private readonly Dictionary<BlockIndex, GridBlock<T>> blocks;
         internal Dictionary<BlockIndex, GridBlock<T>> Blocks => blocks;
+
+        public Grid()
+        {
+            blocks = new Dictionary<BlockIndex, GridBlock<T>>();
+        }
 
         internal bool TryGetBlock(BlockIndex blockIndex, out GridBlock<T> block)
         {
