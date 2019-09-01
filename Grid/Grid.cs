@@ -53,9 +53,9 @@ namespace Grid
         public static GridIndex CellToLocalIndex(int cellIndex)
         {
             return new GridIndex(
-                 cellIndex                      & BlockSize,
-                (cellIndex >> BlockIndexShift)  & BlockSize,
-                (cellIndex >> BlockIndexShift2) & BlockSize);
+                 cellIndex                      & BlockIndexMask,
+                (cellIndex >> BlockIndexShift)  & BlockIndexMask,
+                (cellIndex >> BlockIndexShift2) & BlockIndexMask);
         }
         public static int LocalToCellIndex(GridIndex gridIndex)
         {
@@ -238,10 +238,13 @@ namespace Grid
             {
                 GridIndex baseCellIndex = IndexDetails.BlockToGridIndex(blockItem.Key);
 
-                for (int i = 0; i < IndexDetails.BlockSize3; ++i)
+                for (int cellIndex = 0; cellIndex < IndexDetails.BlockSize3; ++cellIndex)
                 {
-                    GridIndex gridIndex = baseCellIndex + IndexDetails.CellToLocalIndex(i);
-                    yield return Tuple.Create(gridIndex, blockItem.Value.cells[i]);
+                    if (blockItem.Value.GetActive(cellIndex))
+                    {
+                        GridIndex gridIndex = baseCellIndex + IndexDetails.CellToLocalIndex(cellIndex);
+                        yield return Tuple.Create(gridIndex, blockItem.Value.cells[cellIndex]);
+                    }
                 }
             }
         }
