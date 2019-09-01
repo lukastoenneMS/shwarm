@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
+using Shwarm.Math;
 using System;
 using System.Collections.Generic;
 using Utils;
@@ -194,6 +195,28 @@ namespace Grid
         private readonly Dictionary<BlockIndex, GridBlock<T>> blocks;
         internal Dictionary<BlockIndex, GridBlock<T>> Blocks => blocks;
 
+        private float3 origin;
+        public float3 Origin { get => origin; set => origin = value; }
+
+        private float3 cellSize;
+        private float3 invCellSize;
+        private float3 CellSize
+        {
+            get => cellSize;
+            set
+            {
+                if (cellSize.x <= 0.0f || cellSize.y <= 0.0f || cellSize.z <= 0.0f)
+                {
+                    throw new ArgumentException("Cell size must not be greater than zero");
+                }
+
+                cellSize = value;
+                invCellSize = new float3(1.0f/value.x, 1.0f/value.y, 1.0f/value.z);
+            }
+        }
+
+        private readonly float3 cellCenterOffset = new float3(0.5f, 0.5f, 0.5f);
+
         public Grid()
         {
             blocks = new Dictionary<BlockIndex, GridBlock<T>>();
@@ -227,6 +250,62 @@ namespace Grid
                 blocks.Add(blockIndex, block);
             }
             return block;
+        }
+
+        public float3 TransformCorner(float3 gridIndex)
+        {
+            return gridIndex.Scale(cellSize) + origin;
+        }
+        public float3 TransformCorner(GridIndex gridIndex)
+        {
+            return TransformCorner(new float3(gridIndex.i, gridIndex.j, gridIndex.k));
+        }
+
+        public float3 TransformCenter(float3 gridIndex)
+        {
+            return (gridIndex + cellCenterOffset).Scale(cellSize) + origin;
+        }
+        public float3 TransformCenter(GridIndex gridIndex)
+        {
+            return TransformCenter(new float3(gridIndex.i, gridIndex.j, gridIndex.k));
+        }
+
+        public void InverseTransformCorner(float3 point, out float3 gridIndex)
+        {
+            gridIndex = (point - origin).Scale(invCellSize);
+        }
+        public void InverseTransformCorner(float3 point, out GridIndex gridIndex, out float3 cellOffset)
+        {
+            InverseTransformCorner(point, out float3 pGrid);
+            gridIndex = new GridIndex((int)pGrid.x, (int)pGrid.y, (int)pGrid.z);
+            cellOffset = new float3(
+                pGrid.x - (float)Math.Floor(pGrid.x),
+                pGrid.y - (float)Math.Floor(pGrid.y),
+                pGrid.z - (float)Math.Floor(pGrid.z));
+        }
+        public void InverseTransformCorner(float3 point, out GridIndex gridIndex)
+        {
+            InverseTransformCorner(point, out float3 pGrid);
+            gridIndex = new GridIndex((int)pGrid.x, (int)pGrid.y, (int)pGrid.z);
+        }
+
+        public void InverseTransformCenter(float3 point, out float3 gridIndex)
+        {
+            gridIndex = (point - origin).Scale(invCellSize) - cellCenterOffset;
+        }
+        public void InverseTransformCenter(float3 point, out GridIndex gridIndex, out float3 cellOffset)
+        {
+            InverseTransformCenter(point, out float3 pGrid);
+            gridIndex = new GridIndex((int)pGrid.x, (int)pGrid.y, (int)pGrid.z);
+            cellOffset = new float3(
+                pGrid.x - (float)Math.Floor(pGrid.x),
+                pGrid.y - (float)Math.Floor(pGrid.y),
+                pGrid.z - (float)Math.Floor(pGrid.z));
+        }
+        public void InverseTransformCenter(float3 point, out GridIndex gridIndex)
+        {
+            InverseTransformCenter(point, out float3 pGrid);
+            gridIndex = new GridIndex((int)pGrid.x, (int)pGrid.y, (int)pGrid.z);
         }
     }
 
