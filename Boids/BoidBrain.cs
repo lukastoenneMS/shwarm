@@ -57,7 +57,6 @@ namespace Boids
 
         void FixedUpdate()
         {
-            BoidDebug.ClearAll();
             ApplyRules();
         }
 
