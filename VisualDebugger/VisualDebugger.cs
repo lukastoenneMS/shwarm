@@ -89,6 +89,7 @@ namespace Shwarm.Vdb
     {
         void DrawText(Vector3 position, string text, Color color);
         void DrawPoint(int id, Vector3 position, float size, float pickSize, Color color, Color selectionColor);
+        void DrawCube(int id, Vector3 position, Quaternion rotation, float pickSize, float size, Color color, Color selectionColor);
         void DrawLine(Vector3 a, Vector3 b, Color color);
         void DrawLines(Vector3[] segments, Color color);
         void DrawArc(Vector3 center, Vector3 normal, Vector3 from, float angle, float radius, Color color);

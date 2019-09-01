@@ -85,7 +85,7 @@ namespace Grid
 
         private float3 cellSize;
         private float3 invCellSize;
-        private float3 CellSize
+        public float3 CellSize
         {
             get => cellSize;
             set
@@ -104,12 +104,21 @@ namespace Grid
 
         public Grid()
         {
+            origin = new float3(0.0f, 0.0f, 0.0f);
+            cellSize = new float3(1.0f, 1.0f, 1.0f);
+            invCellSize = new float3(1.0f, 1.0f, 1.0f);
+
             blocks = new Dictionary<BlockIndex, GridBlock<T>>();
         }
 
         public Grid<T> Copy()
         {
             Grid<T> result = new Grid<T>();
+
+            result.origin = origin;
+            result.cellSize = cellSize;
+            result.invCellSize = invCellSize;
+
             foreach (var item in blocks)
             {
                 result.blocks.Add(item.Key, item.Value.Copy());

@@ -299,6 +299,15 @@ namespace Shwarm.Vdb
             }
         }
 
+        public void DrawCube(int id, Vector3 position, Quaternion rotation, float pickSize, float size, Color color, Color selectionColor)
+        {
+            Handles.color = (id == selection ? selectionColor : color);
+            if (Handles.Button(position, rotation, size, pickSize, Handles.CubeHandleCap))
+            {
+                selection = id;
+            }
+        }
+
         public void DrawLine(Vector3 a, Vector3 b, Color color)
         {
             Handles.color = color;

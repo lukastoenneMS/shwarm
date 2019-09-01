@@ -1,8 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
-using UnityEngine;
 using Grid;
+using Shwarm.Math;
+using Shwarm.Unity;
+using UnityEngine;
 
 namespace Boids
 {
@@ -13,11 +15,14 @@ namespace Boids
         private GridAccessor<float> gridAcc;
 
         private float time;
-        public float ChangeInterval = 2.0f;
+        private const float ChangeInterval = 0.5f;
+        private const float Speed1 = 1.0f / 7.3f;
+        private const float Speed2 = 1.0f / 2.8f;
 
         public GridRule()
         {
             grid = new Grid<float>();
+            grid.CellSize = new float3(1, 1, 1) * 0.06f;
             gridAcc = grid.GetAccessor();
             time = 0.0f;
         }
@@ -27,12 +32,16 @@ namespace Boids
             float prevTime = time;
             time += Time.deltaTime;
 
-
             int prevStep = (int)(prevTime / ChangeInterval);
             int step = (int)(time / ChangeInterval);
             if (prevStep < step)
             {
-                gridAcc.SetValue(new GridIndex(step,2,3), time);
+                float a = 2.0f * Mathf.PI * time * Speed1;
+                float b = 2.0f * Mathf.PI * time * Speed2;
+                float3 p = (Quaternion.Euler(a, 0, 0) * Quaternion.Euler(0, b, 0) * new Vector3(1, 0, 0)).ToFloat3();
+                grid.InverseTransformCenter(p, out GridIndex gridIndex);
+
+                gridAcc.SetValue(gridIndex, 0.8f);
                 BoidDebug.SetGrid(grid);
             }
         }

@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
+using Shwarm.Math;
+using Shwarm.Unity;
 using System;
 using UnityEngine;
 
@@ -221,11 +223,17 @@ namespace Shwarm.Vdb
             if (vdb.TryGetLatestKeyframeData<VdbBoidGridKeyframe>(currentFrame, out var gridData, out int frame))
             {
                 Grid.GridAccessor<float> acc = gridData.grid.GetAccessor();
-                // Debug.Log($"GRID: {gridData.grid}");
+
+                float3 cellSize = gridData.grid.CellSize;
+                float cellScale = Mathf.Min(cellSize.x, cellSize.y, cellSize.z);
 
                 for (var iter = Grid.GridIterator.GetCells(gridData.grid); iter.MoveNext(); )
                 {
-                    Debug.Log($"First cell: {iter.Current.Item1} -> {iter.Current.Item2}");
+                    Vector3 center = gridData.grid.TransformCenter(iter.Current.Item1).ToVector3();
+                    float size = cellScale;
+                    float pickSize = size * 1.2f;
+                    renderer.DrawCube(0, new Vector3(center.x, center.y, center.z), Quaternion.identity, pickSize, size, Color.white, new Color(1.0f, 0.5f, 0.0f));
+                    // Debug.Log($"First cell: {iter.Current.Item1} -> {iter.Current.Item2}");
                     break;
                 }
             }
