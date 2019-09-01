@@ -178,10 +178,14 @@ namespace Shwarm.Vdb
             itemListScroll = GUILayout.BeginScrollView(itemListScroll);
             EditorGUI.indentLevel = 1;
 
-            foreach (var blob in keyframe.data.blobs)
+            if (keyframe.TryGetData<VdbBoidStateKeyframe>(out var data))
             {
-                GUI.SetNextControlName("id" + blob.Key);
-                EditorGUILayout.SelectableLabel(blob.Key.ToString(), GUILayout.Height(18));
+                foreach (var item in data)
+                {
+                    int id = item.Key;
+                    GUI.SetNextControlName("id" + id);
+                    EditorGUILayout.SelectableLabel(id.ToString(), GUILayout.Height(18));
+                }
             }
 
             string selectedName = GUI.GetNameOfFocusedControl();

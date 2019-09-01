@@ -26,19 +26,32 @@ namespace Shwarm.Vdb
             keyframe = null;
         }
 
-        public void RecordData(int id, BoidState data)
+        public void RecordData(int id, BoidState state)
         {
             if (keyframe != null)
             {
-                keyframe.data.RecordData(id, data);
+                VdbBoidState vdbState = new VdbBoidState();
+                vdbState.position = state.position;
+                vdbState.velocity = state.velocity;
+                vdbState.direction = state.direction;
+                vdbState.roll = state.roll;
+                vdbState.angularVelocity = state.angularVelocity;
+
+                var data = keyframe.GetOrCreateData<VdbBoidStateKeyframe>();
+                data.Store(id, vdbState);
             }
         }
 
-        public void RecordData(int id, BoidTarget data)
+        public void RecordData(int id, BoidTarget target)
         {
             if (keyframe != null)
             {
-                keyframe.data.RecordData(id, data);
+                VdbBoidTarget vdbTarget = new VdbBoidTarget();
+                vdbTarget.direction = target.direction;
+                vdbTarget.speed = target.speed;
+
+                var data = keyframe.GetOrCreateData<VdbBoidTargetKeyframe>();
+                data.Store(id, vdbTarget);
             }
         }
     }

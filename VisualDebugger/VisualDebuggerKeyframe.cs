@@ -3,89 +3,81 @@
 
 using Boids;
 using UnityEngine;
+using System;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace Shwarm.Vdb
 {
-    public struct DataBlob
+    public interface IKeyframeFeature
     {
-        public struct BoidState
-        {
-            public Vector3 position;
-            public Vector3 velocity;
-            public Vector3 direction;
-            public float roll;
-            public Vector3 angularVelocity;
-        }
-
-        public struct BoidTarget
-        {
-            public Vector3 direction;
-            public float speed;
-        }
-
-        public BoidState state;
-        public BoidTarget target;
     }
 
-    internal class DataInstanceMap
+    public class InstanceKeyframeFeature<T> : IEnumerable<KeyValuePair<int, T>>, IKeyframeFeature
     {
-        public readonly Dictionary<int, DataBlob> blobs = new Dictionary<int, DataBlob>();
+        private readonly Dictionary<int, T> instanceData = new Dictionary<int, T>();
 
-        public void RecordData(int id, BoidState data)
+        public void Store(int id, T data)
         {
-            DataBlob.BoidState state = new DataBlob.BoidState();
-            state.position = data.position;
-            state.velocity = data.velocity;
-            state.direction = data.direction;
-            state.roll = data.roll;
-            state.angularVelocity = data.angularVelocity;
-
-            DataBlob blob = GetDataBlob(id);
-            blob.state = state;
-            blobs[id] = blob;
+            instanceData[id] = data;
         }
 
-        public void RecordData(int id, BoidTarget data)
+        public bool TryGetValue(int id, out T data)
         {
-            DataBlob.BoidTarget target = new DataBlob.BoidTarget();
-            target.direction = data.direction;
-            target.speed = data.speed;
-
-            DataBlob blob = GetDataBlob(id);
-            blob.target = target;
-            blobs[id] = blob;
+            return instanceData.TryGetValue(id, out data);
         }
 
-        private DataBlob GetDataBlob(int id)
+        // Must implement GetEnumerator, which returns a new StreamReaderEnumerator.
+        public IEnumerator<KeyValuePair<int, T>> GetEnumerator()
         {
-            if (!blobs.TryGetValue(id, out DataBlob blob))
-            {
-                blob = new DataBlob();
-                blobs.Add(id, blob);
-            }
-            return blob;
+            return instanceData.GetEnumerator();
+        }
+
+        // Must also implement IEnumerable.GetEnumerator, but implement as a private method.
+        private IEnumerator GetEnumerator1()
+        {
+            return this.GetEnumerator();
+        }
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator1();
         }
     }
-
-    // public class DataInstanceMap<Data, Store>
-    // {
-    //     private readonly Dictionary<int, Store> blobs = new Dictionary<int, Store>();
-
-    //     public void RecordData(int id, Data data)
-    //     {
-    //         blobs.Add(id, )
-    //     }
-    // }
 
     public class Keyframe
     {
         public double timestamp;
 
-        internal readonly DataInstanceMap data = new DataInstanceMap();
+        private readonly Dictionary<Type, object> featureData = new Dictionary<Type, object>();
 
         public Keyframe()
         {
+        }
+
+        public bool TryGetData<T>(out T data) where T : class, IKeyframeFeature
+        {
+            if (featureData.TryGetValue(typeof(T), out object value))
+            {
+                data = value as T;
+                return true;
+            }
+            data = null;
+            return false;
+        }
+
+        public T GetOrCreateData<T>() where T : class, IKeyframeFeature, new()
+        {
+            T data;
+            if (featureData.TryGetValue(typeof(T), out object value))
+            {
+                data = value as T;
+            }
+            else
+            {
+                data = new T();
+                featureData.Add(typeof(T), data);
+            }
+            return data;
         }
     }
 }
