@@ -23,6 +23,11 @@ namespace Shwarm.Vdb
     }
     public class VdbBoidTargetKeyframe : InstanceKeyframeFeature<VdbBoidTarget> { }
 
+    public class VdbBoidGridKeyframe : IKeyframeFeature
+    {
+        public Grid.Grid<float> grid;
+    }
+
 
     public class BoidIdsFeature : VisualDebuggerFeature
     {
@@ -30,8 +35,7 @@ namespace Shwarm.Vdb
 
         public override void Render(VisualDebugger vdb, IVisualDebuggerRenderer renderer, int currentFrame, Predicate<int> filter)
         {
-            Keyframe keyframe = vdb.GetKeyframe(currentFrame);
-            if (keyframe.TryGetData<VdbBoidStateKeyframe>(out var data))
+            if (vdb.TryGetKeyframeData<VdbBoidStateKeyframe>(currentFrame, out var data))
             {
                 foreach (var item in data)
                 {
@@ -52,8 +56,7 @@ namespace Shwarm.Vdb
 
         public override void Render(VisualDebugger vdb, IVisualDebuggerRenderer renderer, int currentFrame, Predicate<int> filter)
         {
-            Keyframe keyframe = vdb.GetKeyframe(currentFrame);
-            if (keyframe.TryGetData<VdbBoidStateKeyframe>(out var data))
+            if (vdb.TryGetKeyframeData<VdbBoidStateKeyframe>(currentFrame, out var data))
             {
                 foreach (var item in data)
                 {
@@ -86,12 +89,10 @@ namespace Shwarm.Vdb
             }
 
             int numSegments = 0;
-            Keyframe prevKeyframe = vdb.GetKeyframe(firstFrame);
             for (int frame = firstFrame + 1; frame <= lastFrame; ++frame)
             {
-                Keyframe keyframe = vdb.GetKeyframe(frame);
-                if (keyframe.TryGetData<VdbBoidStateKeyframe>(out var data)
-                 && prevKeyframe.TryGetData<VdbBoidStateKeyframe>(out var prevData))
+                if (vdb.TryGetKeyframeData<VdbBoidStateKeyframe>(frame, out var data)
+                 && vdb.TryGetKeyframeData<VdbBoidStateKeyframe>(frame - 1, out var prevData))
                 {
                     foreach (var item in data)
                     {
@@ -106,19 +107,15 @@ namespace Shwarm.Vdb
                         }
                     }
                 }
-
-                prevKeyframe = keyframe;
             }
 
             Vector3[] segments = new Vector3[numSegments];
 
             int seg = 0;
-            prevKeyframe = vdb.GetKeyframe(firstFrame);
             for (int frame = firstFrame + 1; frame <= lastFrame; ++frame)
             {
-                Keyframe keyframe = vdb.GetKeyframe(frame);
-                if (keyframe.TryGetData<VdbBoidStateKeyframe>(out var data)
-                 && prevKeyframe.TryGetData<VdbBoidStateKeyframe>(out var prevData))
+                if (vdb.TryGetKeyframeData<VdbBoidStateKeyframe>(frame, out var data)
+                 && vdb.TryGetKeyframeData<VdbBoidStateKeyframe>(frame - 1, out var prevData))
                 {
                     foreach (var item in data)
                     {
@@ -135,8 +132,6 @@ namespace Shwarm.Vdb
                         }
                     }
                 }
-
-                prevKeyframe = keyframe;
             }
 
             renderer.DrawLines(segments, Color.gray);
@@ -151,8 +146,7 @@ namespace Shwarm.Vdb
 
         public override void Render(VisualDebugger vdb, IVisualDebuggerRenderer renderer, int currentFrame, Predicate<int> filter)
         {
-            Keyframe keyframe = vdb.GetKeyframe(currentFrame);
-            if (keyframe.TryGetData<VdbBoidStateKeyframe>(out var data))
+            if (vdb.TryGetKeyframeData<VdbBoidStateKeyframe>(currentFrame, out var data))
             {
                 foreach (var item in data)
                 {
@@ -175,8 +169,7 @@ namespace Shwarm.Vdb
 
         public override void Render(VisualDebugger vdb, IVisualDebuggerRenderer renderer, int currentFrame, Predicate<int> filter)
         {
-            Keyframe keyframe = vdb.GetKeyframe(currentFrame);
-            if (keyframe.TryGetData<VdbBoidStateKeyframe>(out var data))
+            if (vdb.TryGetKeyframeData<VdbBoidStateKeyframe>(currentFrame, out var data))
             {
                 foreach (var item in data)
                 {
@@ -200,9 +193,8 @@ namespace Shwarm.Vdb
 
         public override void Render(VisualDebugger vdb, IVisualDebuggerRenderer renderer, int currentFrame, Predicate<int> filter)
         {
-            Keyframe keyframe = vdb.GetKeyframe(currentFrame);
-            if (keyframe.TryGetData<VdbBoidStateKeyframe>(out var stateData)
-             && keyframe.TryGetData<VdbBoidTargetKeyframe>(out var targetData))
+            if (vdb.TryGetKeyframeData<VdbBoidStateKeyframe>(currentFrame, out var stateData)
+             && vdb.TryGetKeyframeData<VdbBoidTargetKeyframe>(currentFrame, out var targetData))
             {
                 foreach (var item in targetData)
                 {
@@ -215,6 +207,26 @@ namespace Shwarm.Vdb
                             renderer.DrawLine(state.position, state.position + target.direction * Scale, Color.cyan);
                         }
                     }
+                }
+            }
+        }
+    }
+
+    public class BoidGridFeature : VisualDebuggerFeature
+    {
+        public override string Name => "Boid Grid";
+
+        public override void Render(VisualDebugger vdb, IVisualDebuggerRenderer renderer, int currentFrame, Predicate<int> filter)
+        {
+            if (vdb.TryGetLatestKeyframeData<VdbBoidGridKeyframe>(currentFrame, out var gridData, out int frame))
+            {
+                Grid.GridAccessor<float> acc = gridData.grid.GetAccessor();
+                // Debug.Log($"GRID: {gridData.grid}");
+
+                for (var iter = Grid.GridIterator.GetCells(gridData.grid); iter.MoveNext(); )
+                {
+                    Debug.Log($"First cell: {iter.Current.Item1} -> {iter.Current.Item2}");
+                    break;
                 }
             }
         }

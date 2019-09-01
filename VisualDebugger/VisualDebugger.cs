@@ -17,6 +17,7 @@ namespace Shwarm.Vdb
             new BoidVelocityFeature() { Enabled=true },
             new BoidRotationFeature(),
             new BoidTargetFeature(),
+            new BoidGridFeature(),
         };
 
         private readonly List<Keyframe> keyframes = new List<Keyframe>();
@@ -26,6 +27,30 @@ namespace Shwarm.Vdb
         public Keyframe GetKeyframe(int index)
         {
             return keyframes[index];
+        }
+
+        public bool TryGetKeyframeData<T>(int index, out T data) where T : class, IKeyframeFeature
+        {
+            Keyframe keyframe = keyframes[index];
+            return keyframe.TryGetData<T>(out data);
+        }
+
+        public bool TryGetLatestKeyframeData<T>(int index, out T data, out int latestIndex) where T : class, IKeyframeFeature
+        {
+            latestIndex = index;
+            while (index >= 0)
+            {
+                Keyframe keyframe = keyframes[index];
+                if (keyframe.TryGetData<T>(out data))
+                {
+                    return true;
+                }
+
+                --index;
+            }
+            latestIndex = 0;
+            data = null;
+            return false;
         }
 
         public void AddKeyframe(Keyframe keyframe)

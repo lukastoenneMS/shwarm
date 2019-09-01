@@ -81,6 +81,11 @@ namespace Grid
             return HashUtils.CombineHashCodes(i, j, k);
         }
 
+        public override string ToString()
+        {
+            return "GridIndex(" + i + ", " + j + ", " + k + ")";
+        }
+
         public static GridIndex operator +(GridIndex a, GridIndex b)
         {
             return new GridIndex(a.i + b.i, a.j + b.j, a.k + b.k);
@@ -109,6 +114,11 @@ namespace Grid
         {
             return HashUtils.CombineHashCodes(i, j, k);
         }
+
+        public override string ToString()
+        {
+            return "BlockIndex(" + i + ", " + j + ", " + k + ")";
+        }
     }
 
     public class GridBlock<T>
@@ -128,6 +138,15 @@ namespace Grid
             active = new int[IndexDetails.BlockSize3 >> 3];
             activeCount = 0;
             cells = new T[IndexDetails.BlockSize3];
+        }
+
+        public GridBlock<T> Copy()
+        {
+            GridBlock<T> result = new GridBlock<T>();
+            System.Buffer.BlockCopy(this.active, 0, result.active, 0, this.active.Length);
+            System.Buffer.BlockCopy(this.cells, 0, result.cells, 0, this.cells.Length);
+            result.activeCount = this.activeCount;
+            return result;
         }
 
         public bool GetActive(int cellIndex)
@@ -178,6 +197,16 @@ namespace Grid
         public Grid()
         {
             blocks = new Dictionary<BlockIndex, GridBlock<T>>();
+        }
+
+        public Grid<T> Copy()
+        {
+            Grid<T> result = new Grid<T>();
+            foreach (var item in blocks)
+            {
+                result.blocks.Add(item.Key, item.Value.Copy());
+            }
+            return result;
         }
 
         public GridAccessor<T> GetAccessor()

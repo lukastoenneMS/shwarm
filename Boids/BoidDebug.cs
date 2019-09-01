@@ -16,12 +16,12 @@ namespace Boids
 
         public static void SetTarget(BoidParticle particle, BoidState state, BoidTarget target)
         {
-            recorder.RecordData(state.instanceID, target);
+            recorder.RecordBoidTarget(state.instanceID, target);
         }
 
         public static void SetPhysics(BoidParticle particle, BoidState state, Vector3 force, Vector3 torque)
         {
-            recorder.RecordData(state.instanceID, state);
+            recorder.RecordBoidState(state.instanceID, state);
         }
 
         public static void AddSwarmPoint(BoidParticle particle, BoidState state, Vector3 point, float weight)
@@ -34,6 +34,11 @@ namespace Boids
 
         public static void AddBoidCollisionCone(BoidParticle particle, BoidState state, Vector3 dir, Vector3 colliderDir, float radius)
         {
+        }
+
+        public static void SetGrid(Grid.Grid<float> grid)
+        {
+            recorder.RecordGrid(grid);
         }
     }
 }

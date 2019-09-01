@@ -26,7 +26,7 @@ namespace Shwarm.Vdb
             keyframe = null;
         }
 
-        public void RecordData(int id, BoidState state)
+        public void RecordBoidState(int id, BoidState state)
         {
             if (keyframe != null)
             {
@@ -42,7 +42,7 @@ namespace Shwarm.Vdb
             }
         }
 
-        public void RecordData(int id, BoidTarget target)
+        public void RecordBoidTarget(int id, BoidTarget target)
         {
             if (keyframe != null)
             {
@@ -52,6 +52,15 @@ namespace Shwarm.Vdb
 
                 var data = keyframe.GetOrCreateData<VdbBoidTargetKeyframe>();
                 data.Store(id, vdbTarget);
+            }
+        }
+
+        public void RecordGrid(Grid.Grid<float> grid)
+        {
+            if (keyframe != null)
+            {
+                var data = keyframe.GetOrCreateData<VdbBoidGridKeyframe>();
+                data.grid = grid.Copy();
             }
         }
     }
