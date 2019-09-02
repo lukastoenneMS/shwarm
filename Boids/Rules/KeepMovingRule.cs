@@ -3,7 +3,7 @@
 
 using UnityEngine;
 
-namespace Boids
+namespace Shwarm.Boids
 {
     /// <summary>
     /// Rule to keep moving in the current direction at minimum speed.

@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
-namespace Boids
+namespace Shwarm.Boids
 {
     // Result of evaluating a boid rule for a given particle
     public class BoidTarget : IEquatable<BoidTarget>

@@ -7,7 +7,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.Assertions;
 
-namespace Boids
+namespace Shwarm.Boids
 {
     [System.Serializable]
     public class BoidBrain : MonoBehaviour

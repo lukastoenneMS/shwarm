@@ -3,7 +3,7 @@
 
 using Utils;
 
-namespace Grid
+namespace Shwarm.Grid
 {
     public static class IndexDetails
     {

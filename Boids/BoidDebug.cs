@@ -8,7 +8,7 @@ using UnityEngine.Events;
 using UnityEngine.Assertions;
 using Shwarm.Vdb;
 
-namespace Boids
+namespace Shwarm.Boids
 {
     public static class BoidDebug
     {

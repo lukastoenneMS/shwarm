@@ -3,7 +3,7 @@
 
 using UnityEngine;
 
-namespace Boids
+namespace Shwarm.Boids
 {
     [CreateAssetMenu(fileName = "GoalRule", menuName = "Boids/GoalRule", order = 1)]
     public class GoalRule : BoidRule

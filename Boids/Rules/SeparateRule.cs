@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
-namespace Boids
+namespace Shwarm.Boids
 {
     [CreateAssetMenu(fileName = "SeparateRule", menuName = "Boids/SeparateRule", order = 1)]
     public class SeparateRule : BoidRule

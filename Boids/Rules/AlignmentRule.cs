@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
-namespace Boids
+namespace Shwarm.Boids
 {
     [CreateAssetMenu(fileName = "AlignmentRule", menuName = "Boids/AlignmentRule", order = 1)]
     public class AlignmentRule : BoidRule

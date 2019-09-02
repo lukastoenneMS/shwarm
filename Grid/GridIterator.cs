@@ -4,7 +4,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Grid
+namespace Shwarm.Grid
 {
     public static class GridIterator
     {

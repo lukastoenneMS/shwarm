@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
-namespace Boids
+namespace Shwarm.Boids
 {
     [CreateAssetMenu(fileName = "AvoidBoidCollisionRule", menuName = "Boids/AvoidBoidCollisionRule", order = 1)]
     public class AvoidBoidCollisionRule : BoidRule

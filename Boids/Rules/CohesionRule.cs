@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
-namespace Boids
+namespace Shwarm.Boids
 {
     [CreateAssetMenu(fileName = "CohesionRule", menuName = "Boids/CohesionRule", order = 1)]
     public class CohesionRule : BoidRule

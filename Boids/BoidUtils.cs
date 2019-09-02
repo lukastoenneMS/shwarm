@@ -4,7 +4,7 @@
 using System;
 using UnityEngine;
 
-namespace Boids
+namespace Shwarm.Boids
 {
     public static class BoidUtils
     {

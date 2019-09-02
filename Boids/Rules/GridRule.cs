@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
-using Grid;
-using Shwarm.Math;
+using Shwarm.Grid;
+using Shwarm.MathUtils;
 using Shwarm.Unity;
 using UnityEngine;
 
-namespace Boids
+namespace Shwarm.Boids
 {
     [CreateAssetMenu(fileName = "GridRule", menuName = "Boids/GridRule", order = 1)]
     public class GridRule : BoidRule
