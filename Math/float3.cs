@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
+using Math = System.Math;
+
 namespace Shwarm.MathUtils
 {
     public struct float3
@@ -39,6 +41,16 @@ namespace Shwarm.MathUtils
         public float3 Scale(float3 v)
         {
             return new float3(this.x * v.x, this.y * v.y, this.z * v.z);
+        }
+
+        public float NormSqr()
+        {
+            return x*x + y*y + z*z;
+        }
+
+        public float Norm()
+        {
+            return (float)Math.Sqrt(NormSqr());
         }
     }
 }

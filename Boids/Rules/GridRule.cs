@@ -12,7 +12,7 @@ namespace Shwarm.Boids
     public class GridRule : BoidRule
     {
         private Grid<float> grid;
-        private GridAccessor<float> gridAcc;
+        private TreeAccessor<float> treeAcc;
 
         private float time;
         private const float ChangeInterval = 0.5f;
@@ -23,7 +23,7 @@ namespace Shwarm.Boids
         {
             grid = new Grid<float>();
             grid.CellSize = new float3(1, 1, 1) * 0.06f;
-            gridAcc = grid.GetAccessor();
+            treeAcc = grid.Tree.GetAccessor();
             time = 0.0f;
         }
 
@@ -41,7 +41,7 @@ namespace Shwarm.Boids
                 float3 p = (Quaternion.Euler(a, 0, 0) * Quaternion.Euler(0, b, 0) * new Vector3(1, 0, 0)).ToFloat3();
                 grid.InverseTransformCenter(p, out GridIndex gridIndex);
 
-                gridAcc.SetValue(gridIndex, 0.8f);
+                treeAcc.SetValue(gridIndex, 0.8f);
                 BoidDebug.SetGrid(grid);
             }
         }

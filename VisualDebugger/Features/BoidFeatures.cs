@@ -222,7 +222,7 @@ namespace Shwarm.Vdb
         {
             if (vdb.TryGetLatestKeyframeData<VdbBoidGridKeyframe>(currentFrame, out var gridData, out int frame))
             {
-                Grid.GridAccessor<float> acc = gridData.grid.GetAccessor();
+                Grid.TreeAccessor<float> acc = gridData.grid.Tree.GetAccessor();
 
                 float3 cellSize = gridData.grid.CellSize;
                 float cellScale = Mathf.Min(cellSize.x, cellSize.y, cellSize.z);

@@ -75,10 +75,51 @@ namespace Shwarm.Grid
         }
     }
 
-    public class Grid<T>
+    public class Tree<T>
     {
         private readonly Dictionary<BlockIndex, GridBlock<T>> blocks;
         internal Dictionary<BlockIndex, GridBlock<T>> Blocks => blocks;
+
+        public Tree()
+        {
+            blocks = new Dictionary<BlockIndex, GridBlock<T>>();
+        }
+
+        public Tree<T> Copy()
+        {
+            Tree<T> result = new Tree<T>();
+            foreach (var item in blocks)
+            {
+                result.blocks.Add(item.Key, item.Value.Copy());
+            }
+            return result;
+        }
+
+        public TreeAccessor<T> GetAccessor()
+        {
+            return new TreeAccessor<T>(this);
+        }
+
+        internal bool TryGetBlock(BlockIndex blockIndex, out GridBlock<T> block)
+        {
+            return blocks.TryGetValue(blockIndex, out block);
+        }
+
+        internal GridBlock<T> GetOrCreateBlock(BlockIndex blockIndex)
+        {
+            if (!blocks.TryGetValue(blockIndex, out GridBlock<T> block))
+            {
+                block = new GridBlock<T>();
+                blocks.Add(blockIndex, block);
+            }
+            return block;
+        }
+    }
+
+    public class Grid<T>
+    {
+        private Tree<T> tree;
+        public Tree<T> Tree => tree;
 
         private float3 origin;
         public float3 Origin { get => origin; set => origin = value; }
@@ -108,7 +149,7 @@ namespace Shwarm.Grid
             cellSize = new float3(1.0f, 1.0f, 1.0f);
             invCellSize = new float3(1.0f, 1.0f, 1.0f);
 
-            blocks = new Dictionary<BlockIndex, GridBlock<T>>();
+            tree = new Tree<T>();
         }
 
         public Grid<T> Copy()
@@ -118,32 +159,9 @@ namespace Shwarm.Grid
             result.origin = origin;
             result.cellSize = cellSize;
             result.invCellSize = invCellSize;
+            result.tree = tree.Copy();
 
-            foreach (var item in blocks)
-            {
-                result.blocks.Add(item.Key, item.Value.Copy());
-            }
             return result;
-        }
-
-        public GridAccessor<T> GetAccessor()
-        {
-            return new GridAccessor<T>(this);
-        }
-
-        internal bool TryGetBlock(BlockIndex blockIndex, out GridBlock<T> block)
-        {
-            return blocks.TryGetValue(blockIndex, out block);
-        }
-
-        internal GridBlock<T> GetOrCreateBlock(BlockIndex blockIndex)
-        {
-            if (!blocks.TryGetValue(blockIndex, out GridBlock<T> block))
-            {
-                block = new GridBlock<T>();
-                blocks.Add(blockIndex, block);
-            }
-            return block;
         }
 
         public float3 TransformCorner(float3 gridIndex)
@@ -171,7 +189,7 @@ namespace Shwarm.Grid
         public void InverseTransformCorner(float3 point, out GridIndex gridIndex, out float3 cellOffset)
         {
             InverseTransformCorner(point, out float3 pGrid);
-            gridIndex = new GridIndex((int)pGrid.x, (int)pGrid.y, (int)pGrid.z);
+            gridIndex = new GridIndex(iFloor(pGrid.x), iFloor(pGrid.y), iFloor(pGrid.z));
             cellOffset = new float3(
                 pGrid.x - (float)Math.Floor(pGrid.x),
                 pGrid.y - (float)Math.Floor(pGrid.y),
@@ -180,7 +198,7 @@ namespace Shwarm.Grid
         public void InverseTransformCorner(float3 point, out GridIndex gridIndex)
         {
             InverseTransformCorner(point, out float3 pGrid);
-            gridIndex = new GridIndex((int)pGrid.x, (int)pGrid.y, (int)pGrid.z);
+            gridIndex = new GridIndex(iFloor(pGrid.x), iFloor(pGrid.y), iFloor(pGrid.z));
         }
 
         public void InverseTransformCenter(float3 point, out float3 gridIndex)
@@ -190,7 +208,7 @@ namespace Shwarm.Grid
         public void InverseTransformCenter(float3 point, out GridIndex gridIndex, out float3 cellOffset)
         {
             InverseTransformCenter(point, out float3 pGrid);
-            gridIndex = new GridIndex((int)pGrid.x, (int)pGrid.y, (int)pGrid.z);
+            gridIndex = new GridIndex(iFloor(pGrid.x), iFloor(pGrid.y), iFloor(pGrid.z));
             cellOffset = new float3(
                 pGrid.x - (float)Math.Floor(pGrid.x),
                 pGrid.y - (float)Math.Floor(pGrid.y),
@@ -199,7 +217,12 @@ namespace Shwarm.Grid
         public void InverseTransformCenter(float3 point, out GridIndex gridIndex)
         {
             InverseTransformCenter(point, out float3 pGrid);
-            gridIndex = new GridIndex((int)pGrid.x, (int)pGrid.y, (int)pGrid.z);
+            gridIndex = new GridIndex(iFloor(pGrid.x), iFloor(pGrid.y), iFloor(pGrid.z));
+        }
+
+        private int iFloor(float x)
+        {
+            return x >= 0.0f ? (int)x : (int)x - 1;
         }
     }
 

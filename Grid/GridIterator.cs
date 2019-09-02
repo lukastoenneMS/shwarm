@@ -10,7 +10,7 @@ namespace Shwarm.Grid
     {
         public static IEnumerator<Tuple<GridIndex, T>> GetCells<T>(Grid<T> grid)
         {
-            foreach (var blockItem in grid.Blocks)
+            foreach (var blockItem in grid.Tree.Blocks)
             {
                 GridIndex baseCellIndex = IndexDetails.BlockToGridIndex(blockItem.Key);
 
