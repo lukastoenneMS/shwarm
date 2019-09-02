@@ -60,6 +60,14 @@ namespace Shwarm.Grid
             block.SetValue(cellIndex, value);
         }
 
+        public void SetValueNoActivate(GridIndex index, T value)
+        {
+            BlockIndex blockIndex = IndexDetails.GridToBlockIndex(index, out int cellIndex);
+            GridBlock<T> block = tree.GetOrCreateBlock(blockIndex);
+
+            block.SetValueNoActivate(cellIndex, value);
+        }
+
         public void Deactivate(GridIndex index)
         {
             BlockIndex blockIndex = IndexDetails.GridToBlockIndex(index, out int cellIndex);

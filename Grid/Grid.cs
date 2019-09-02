@@ -65,6 +65,11 @@ namespace Shwarm.Grid
             active[activeIndex] = currentActiveBits | activeMask;
         }
 
+        public void SetValueNoActivate(int cellIndex, T value)
+        {
+            cells[cellIndex] = value;
+        }
+
         public void Deactivate(int cellIndex)
         {
             int activeIndex = cellIndex >> ActiveTypeShift;
@@ -113,6 +118,11 @@ namespace Shwarm.Grid
                 blocks.Add(blockIndex, block);
             }
             return block;
+        }
+
+        public void Clear()
+        {
+            blocks.Clear();
         }
     }
 

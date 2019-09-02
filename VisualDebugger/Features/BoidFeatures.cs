@@ -234,7 +234,6 @@ namespace Shwarm.Vdb
                     float pickSize = size * 1.2f;
                     renderer.DrawCube(0, new Vector3(center.x, center.y, center.z), Quaternion.identity, pickSize, size, Color.white, new Color(1.0f, 0.5f, 0.0f));
                     // Debug.Log($"First cell: {iter.Current.Item1} -> {iter.Current.Item2}");
-                    break;
                 }
             }
         }
