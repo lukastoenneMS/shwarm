@@ -1,0 +1,15 @@
+{
+    "name": "Shwarm.Boids",
+    "references": [
+        "Shwarm.Grid",
+        "Shwarm.Utils"
+    ],
+    "optionalUnityReferences": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": []
+}
