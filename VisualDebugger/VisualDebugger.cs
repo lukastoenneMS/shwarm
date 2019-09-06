@@ -3,25 +3,44 @@
 
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
 
 namespace Shwarm.Vdb
 {
     public class VisualDebugger : Singleton<VisualDebugger>
     {
-        public readonly VisualDebuggerFeature[] Features = new VisualDebuggerFeature[]
+        private static readonly Dictionary<int, Type> featureTypes = new Dictionary<int, Type>();
+
+        static VisualDebugger()
         {
-            new BoidIdsFeature(),
-            new BoidPositionsFeature() { Enabled=true },
-            new BoidPathsFeature(),
-            new BoidVelocityFeature() { Enabled=true },
-            new BoidRotationFeature(),
-            new BoidTargetFeature(),
-            new BoidGridFeature(),
-        };
+            foreach (Assembly asm in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                foreach (Type type in asm.GetTypes())
+                {
+                    VisualDebuggerFeatureAttribute attr = (VisualDebuggerFeatureAttribute)Attribute.GetCustomAttribute(type, typeof(VisualDebuggerFeatureAttribute));
+                    if (attr != null)
+                    {
+                        featureTypes.Add(attr.Priority, type);
+                    }
+                }
+            }
+        }
+
+        private VisualDebuggerFeature[] features;
+        internal VisualDebuggerFeature[] Features => features;
+
+        public VisualDebugger()
+        {
+            features = new VisualDebuggerFeature[featureTypes.Count];
+            int i = 0;
+            foreach (var ft in featureTypes)
+            {
+                features[i++] = (VisualDebuggerFeature)Activator.CreateInstance(ft.Value);
+            }
+        }
 
         private readonly List<Keyframe> keyframes = new List<Keyframe>();
-
         public int NumKeyframes => keyframes.Count;
 
         public Keyframe GetKeyframe(int index)
@@ -72,7 +91,7 @@ namespace Shwarm.Vdb
 
             foreach (var feature in Features)
             {
-                if (onlyPoints && !(feature is BoidPositionsFeature))
+                if (onlyPoints && !feature.IsPointFeature)
                 {
                     continue;
                 }
@@ -102,6 +121,22 @@ namespace Shwarm.Vdb
         private bool enabled = false;
         public bool Enabled { get => enabled; set => enabled = value; }
 
+        public virtual bool IsPointFeature => false;
+
         public abstract void Render(VisualDebugger vdb, IVisualDebuggerRenderer renderer, int currentFrame, Predicate<int> filter);
+
+        public virtual IEnumerator<int> GetIds(Shwarm.Vdb.Keyframe keyframe) { yield break; }
+    }
+
+    [System.AttributeUsage(System.AttributeTargets.Class | System.AttributeTargets.Struct)]
+    public class VisualDebuggerFeatureAttribute : System.Attribute
+    {
+        private int priority = 0;
+        public int Priority => priority;
+
+        public VisualDebuggerFeatureAttribute(int priority)
+        {
+            this.priority = priority;
+        }
     }
 }

@@ -3,10 +3,12 @@
 
 using Shwarm.MathUtils;
 using Shwarm.Unity;
+using Shwarm.Vdb;
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
-namespace Shwarm.Vdb
+namespace Shwarm.Boids
 {
     public struct VdbBoidState
     {
@@ -31,6 +33,7 @@ namespace Shwarm.Vdb
     }
 
 
+    [VisualDebuggerFeature(10)]
     public class BoidIdsFeature : VisualDebuggerFeature
     {
         public override string Name => "Boid IDs";
@@ -50,11 +53,25 @@ namespace Shwarm.Vdb
                 }
             }
         }
+
+        public override IEnumerator<int> GetIds(Shwarm.Vdb.Keyframe keyframe)
+        {
+            if (keyframe.TryGetData<VdbBoidStateKeyframe>(out var data))
+            {
+                foreach (var item in data)
+                {
+                    yield return item.Key;
+                }
+            }
+        }
     }
 
+    [VisualDebuggerFeature(20)]
     public class BoidPositionsFeature : VisualDebuggerFeature
     {
         public override string Name => "Boid Positions";
+
+        public override bool IsPointFeature => true;
 
         public override void Render(VisualDebugger vdb, IVisualDebuggerRenderer renderer, int currentFrame, Predicate<int> filter)
         {
@@ -73,6 +90,7 @@ namespace Shwarm.Vdb
         }
     }
 
+    [VisualDebuggerFeature(30)]
     public class BoidPathsFeature : VisualDebuggerFeature
     {
         public override string Name => "Boid Paths";
@@ -140,6 +158,7 @@ namespace Shwarm.Vdb
         }
     }
 
+    [VisualDebuggerFeature(40)]
     public class BoidVelocityFeature : VisualDebuggerFeature
     {
         public override string Name => "Boid Velocities";
@@ -163,6 +182,7 @@ namespace Shwarm.Vdb
         }
     }
 
+    [VisualDebuggerFeature(50)]
     public class BoidRotationFeature : VisualDebuggerFeature
     {
         public override string Name => "Boid Rotation";
@@ -187,6 +207,7 @@ namespace Shwarm.Vdb
         }
     }
 
+    [VisualDebuggerFeature(60)]
     public class BoidTargetFeature : VisualDebuggerFeature
     {
         public override string Name => "Boid Targets";
@@ -214,6 +235,7 @@ namespace Shwarm.Vdb
         }
     }
 
+    [VisualDebuggerFeature(70)]
     public class BoidGridFeature : VisualDebuggerFeature
     {
         public override string Name => "Boid Grid";

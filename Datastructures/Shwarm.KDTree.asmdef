@@ -1,10 +1,6 @@
 {
-    "name": "Shwarm.Boids",
+    "name": "Shwarm.KDTree",
     "references": [
-        "Shwarm.Grid",
-        "Shwarm.KDTree",
-        "Shwarm.Utils",
-        "Shwarm.VisualDebugger"
     ],
     "optionalUnityReferences": [],
     "includePlatforms": [],

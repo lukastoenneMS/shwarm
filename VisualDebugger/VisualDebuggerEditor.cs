@@ -1,13 +1,40 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
+#if UNITY_EDITOR
+
 using UnityEngine;
 using UnityEditor;
 using System;
+using System.Reflection;
 using System.Collections.Generic;
 
 namespace Shwarm.Vdb
 {
+    public class VisualDebuggerContext
+    {
+        public VisualDebugger vdb;
+        public int currentFrame = 0;
+        public int selection = 0;
+    }
+
+    public abstract class VisualDebuggerFeatureEditor
+    {
+        public abstract void OnGUI(VisualDebuggerFeature feature, VisualDebuggerContext context);
+    }
+
+    [System.AttributeUsage(System.AttributeTargets.Class | System.AttributeTargets.Struct)]
+    public class VisualDebuggerFeatureEditorAttribute : System.Attribute
+    {
+        private Type featureType;
+        public Type FeatureType => featureType;
+
+        public VisualDebuggerFeatureEditorAttribute(Type featureType)
+        {
+            this.featureType = featureType;
+        }
+    }
+
     [CustomEditor(typeof(VisualDebuggerComponent))]
     public class VisualDebuggerEditor : Editor
     {
@@ -17,9 +44,6 @@ namespace Shwarm.Vdb
         private delegate void DrawFeatureGUI(VisualDebuggerEditor editor, VisualDebuggerFeature feature);
 
         private bool showFilter = false;
-        private bool showItemList = false;
-        private Vector2 itemListScroll = Vector2.zero;
-        private int selection = 0;
 
         enum FilterMode
         {
@@ -31,17 +55,27 @@ namespace Shwarm.Vdb
         private readonly HashSet<int> filterIds = new HashSet<int>();
         private FilterMode filterMode = FilterMode.Solo;
         private static readonly string[] filterNames = Enum.GetNames(typeof(FilterMode));
+        int selection;
 
-        private static readonly Dictionary<System.Type, DrawFeatureGUI> drawFeatureGuiRegistry = new Dictionary<System.Type, DrawFeatureGUI>()
+        private bool showItemList = false;
+        private Vector2 itemListScroll = Vector2.zero;
+
+        private static readonly Dictionary<Type, VisualDebuggerFeatureEditor> featureEditors = new Dictionary<Type, VisualDebuggerFeatureEditor>();
+
+        static VisualDebuggerEditor()
         {
-            { typeof(BoidIdsFeature), (editor, feature) => editor.DrawFeatureGUIImpl(feature as BoidIdsFeature) },
-            { typeof(BoidPositionsFeature), (editor, feature) => editor.DrawFeatureGUIImpl(feature as BoidPositionsFeature) },
-            { typeof(BoidPathsFeature), (editor, feature) => editor.DrawFeatureGUIImpl(feature as BoidPathsFeature) },
-            { typeof(BoidVelocityFeature), (editor, feature) => editor.DrawFeatureGUIImpl(feature as BoidVelocityFeature) },
-            { typeof(BoidRotationFeature), (editor, feature) => editor.DrawFeatureGUIImpl(feature as BoidRotationFeature) },
-            { typeof(BoidTargetFeature), (editor, feature) => editor.DrawFeatureGUIImpl(feature as BoidTargetFeature) },
-            { typeof(BoidGridFeature), (editor, feature) => editor.DrawFeatureGUIImpl(feature as BoidGridFeature) },
-        };
+            foreach (Assembly asm in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                foreach (Type type in asm.GetTypes())
+                {
+                    VisualDebuggerFeatureEditorAttribute attr = (VisualDebuggerFeatureEditorAttribute)Attribute.GetCustomAttribute(type, typeof(VisualDebuggerFeatureEditorAttribute));
+                    if (attr != null)
+                    {
+                        featureEditors.Add(attr.FeatureType, (VisualDebuggerFeatureEditor)Activator.CreateInstance(type));
+                    }
+                }
+            }
+        }
 
         void OnEnable()
         {
@@ -94,13 +128,10 @@ namespace Shwarm.Vdb
                     feature.Enabled = newEnabled;
                 }
 
-                if (drawFeatureGuiRegistry.TryGetValue(feature.GetType(), out DrawFeatureGUI guiFn))
+                if (featureEditors.TryGetValue(feature.GetType(), out VisualDebuggerFeatureEditor editor))
                 {
-                    guiFn(this, feature);
-                }
-                else
-                {
-                    throw new KeyNotFoundException($"No GUI draw function found for VDB feature {feature.Name}");
+                    var context = new VisualDebuggerContext() { vdb = vdb, currentFrame = component.CurrentFrame };
+                    editor.OnGUI(feature, context);
                 }
             }
 
@@ -174,16 +205,16 @@ namespace Shwarm.Vdb
                 return;
             }
 
-            Keyframe keyframe = vdb.GetKeyframe(component.CurrentFrame);
+            Shwarm.Vdb.Keyframe keyframe = vdb.GetKeyframe(component.CurrentFrame);
 
             itemListScroll = GUILayout.BeginScrollView(itemListScroll);
             EditorGUI.indentLevel = 1;
 
-            if (keyframe.TryGetData<VdbBoidStateKeyframe>(out var data))
+            foreach (var feature in vdb.Features)
             {
-                foreach (var item in data)
+                for (var iter = feature.GetIds(keyframe); iter.MoveNext(); )
                 {
-                    int id = item.Key;
+                    int id = iter.Current;
                     GUI.SetNextControlName("id" + id);
                     EditorGUILayout.SelectableLabel(id.ToString(), GUILayout.Height(18));
                 }
@@ -201,39 +232,6 @@ namespace Shwarm.Vdb
 
             GUILayout.EndScrollView();
             EditorGUI.indentLevel = 0;
-        }
-
-        private void DrawFeatureGUIImpl(BoidIdsFeature feature)
-        {
-        }
-
-        private void DrawFeatureGUIImpl(BoidPositionsFeature feature)
-        {
-        }
-
-        private void DrawFeatureGUIImpl(BoidPathsFeature feature)
-        {
-            feature.FramesBeforeCurrent = EditorGUILayout.IntField("Frames Before Current", feature.FramesBeforeCurrent);
-            feature.FramesAfterCurrent = EditorGUILayout.IntField("Frames After Current", feature.FramesAfterCurrent);
-        }
-
-        private void DrawFeatureGUIImpl(BoidVelocityFeature feature)
-        {
-            feature.Scale = EditorGUILayout.Slider("Scale", feature.Scale, 0.0f, 1.0f);
-        }
-
-        private void DrawFeatureGUIImpl(BoidRotationFeature feature)
-        {
-            feature.Scale = EditorGUILayout.Slider("Scale", feature.Scale, 0.0f, 1.0f);
-        }
-
-        private void DrawFeatureGUIImpl(BoidTargetFeature feature)
-        {
-            feature.Scale = EditorGUILayout.Slider("Scale", feature.Scale, 0.0f, 1.0f);
-        }
-
-        private void DrawFeatureGUIImpl(BoidGridFeature feature)
-        {
         }
 
         void OnSceneGUI()
@@ -328,3 +326,5 @@ namespace Shwarm.Vdb
         }
     }
 }
+
+#endif

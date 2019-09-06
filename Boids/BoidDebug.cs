@@ -41,4 +41,45 @@ namespace Shwarm.Boids
             recorder.RecordGrid(grid);
         }
     }
+
+    public static class VdbExtensions
+    {
+        public static void RecordBoidState(this VisualRecorder rec, int id, BoidState state)
+        {
+            if (rec.Keyframe != null)
+            {
+                VdbBoidState vdbState = new VdbBoidState();
+                vdbState.position = state.position;
+                vdbState.velocity = state.velocity;
+                vdbState.direction = state.direction;
+                vdbState.roll = state.roll;
+                vdbState.angularVelocity = state.angularVelocity;
+
+                var data = rec.Keyframe.GetOrCreateData<VdbBoidStateKeyframe>();
+                data.Store(id, vdbState);
+            }
+        }
+
+        public static void RecordBoidTarget(this VisualRecorder rec, int id, BoidTarget target)
+        {
+            if (rec.Keyframe != null)
+            {
+                VdbBoidTarget vdbTarget = new VdbBoidTarget();
+                vdbTarget.direction = target.direction;
+                vdbTarget.speed = target.speed;
+
+                var data = rec.Keyframe.GetOrCreateData<VdbBoidTargetKeyframe>();
+                data.Store(id, vdbTarget);
+            }
+        }
+
+        public static void RecordGrid(this VisualRecorder rec, Grid.Grid<float> grid)
+        {
+            if (rec.Keyframe != null)
+            {
+                var data = rec.Keyframe.GetOrCreateData<VdbBoidGridKeyframe>();
+                data.grid = grid.Copy();
+            }
+        }
+    }
 }

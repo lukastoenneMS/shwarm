@@ -1,13 +1,11 @@
 {
     "name": "Shwarm.VisualDebugger",
     "references": [
-        "Shwarm.Boids",
         "Shwarm.Grid",
         "Shwarm.Utils"
     ],
     "optionalUnityReferences": [],
     "includePlatforms": [
-        "Editor"
     ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
