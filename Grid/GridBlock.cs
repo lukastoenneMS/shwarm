@@ -26,7 +26,7 @@ namespace Shwarm.Grid
             cells = new T[IndexDetails.BlockSize3];
         }
 
-        public GridBlock<T> Copy()
+        public virtual GridBlock<T> Copy()
         {
             GridBlock<T> result = new GridBlock<T>();
             System.Buffer.BlockCopy(this.active, 0, result.active, 0, this.active.Length);

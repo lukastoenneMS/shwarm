@@ -7,7 +7,7 @@ using System.Collections.Generic;
 
 namespace Shwarm.Grid
 {
-    public class Grid<T, BlockType>
+    public class Grid<T, BlockType> where BlockType : GridBlock<T>, new()
     {
         private Tree<T, BlockType> tree;
         public Tree<T, BlockType> Tree => tree;

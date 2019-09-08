@@ -18,7 +18,7 @@ namespace Shwarm.Grid
         void Deactivate(GridIndex index);
     }
 
-    public class TreeAccessor<T, BlockType> : IValueAccessor<T>
+    public class TreeAccessor<T, BlockType> : IValueAccessor<T> where BlockType : GridBlock<T>, new()
     {
         private Tree<T, BlockType> tree;
 
@@ -30,7 +30,7 @@ namespace Shwarm.Grid
         public bool GetActive(GridIndex index)
         {
             BlockIndex blockIndex = IndexDetails.GridToBlockIndex(index, out int cellIndex);
-            if (tree.TryGetBlock(blockIndex, out GridBlock<T> block))
+            if (tree.TryGetBlock(blockIndex, out BlockType block))
             {
                 return block.GetActive(cellIndex);
             }
@@ -43,7 +43,7 @@ namespace Shwarm.Grid
         public T GetValue(GridIndex index)
         {
             BlockIndex blockIndex = IndexDetails.GridToBlockIndex(index, out int cellIndex);
-            if (tree.TryGetBlock(blockIndex, out GridBlock<T> block))
+            if (tree.TryGetBlock(blockIndex, out BlockType block))
             {
                 return block.GetValue(cellIndex);
             }
@@ -56,7 +56,7 @@ namespace Shwarm.Grid
         public void GetValue(GridIndex index, out T value, out bool isActive)
         {
             BlockIndex blockIndex = IndexDetails.GridToBlockIndex(index, out int cellIndex);
-            if (tree.TryGetBlock(blockIndex, out GridBlock<T> block))
+            if (tree.TryGetBlock(blockIndex, out BlockType block))
             {
                 block.GetValue(cellIndex, out value, out isActive);
             }
@@ -70,7 +70,7 @@ namespace Shwarm.Grid
         public void SetValue(GridIndex index, T value)
         {
             BlockIndex blockIndex = IndexDetails.GridToBlockIndex(index, out int cellIndex);
-            GridBlock<T> block = tree.GetOrCreateBlock(blockIndex);
+            BlockType block = tree.GetOrCreateBlock(blockIndex);
 
             block.SetValue(cellIndex, value);
         }
@@ -78,7 +78,7 @@ namespace Shwarm.Grid
         public void SetValueNoActivate(GridIndex index, T value)
         {
             BlockIndex blockIndex = IndexDetails.GridToBlockIndex(index, out int cellIndex);
-            GridBlock<T> block = tree.GetOrCreateBlock(blockIndex);
+            BlockType block = tree.GetOrCreateBlock(blockIndex);
 
             block.SetValueNoActivate(cellIndex, value);
         }
@@ -86,7 +86,7 @@ namespace Shwarm.Grid
         public void Deactivate(GridIndex index)
         {
             BlockIndex blockIndex = IndexDetails.GridToBlockIndex(index, out int cellIndex);
-            if (tree.TryGetBlock(blockIndex, out GridBlock<T> block))
+            if (tree.TryGetBlock(blockIndex, out BlockType block))
             {
                 block.Deactivate(cellIndex);
             }
