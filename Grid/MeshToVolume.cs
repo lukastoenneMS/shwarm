@@ -10,8 +10,8 @@ namespace Shwarm.Grid
     {
         public static void Convert(IReadOnlyCollection<float3> points, Grid<float> distGrid, Tree<int> indexTree)
         {
-            TreeAccessor<float> distAcc = distGrid.Tree.GetAccessor();
-            TreeAccessor<int> indexAcc = indexTree.GetAccessor();
+            IValueAccessor<float> distAcc = distGrid.Tree.GetAccessor();
+            IValueAccessor<int> indexAcc = indexTree.GetAccessor();
 
             int index = 0; 
             foreach (float3 p in points)

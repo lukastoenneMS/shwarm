@@ -3,11 +3,26 @@
 
 namespace Shwarm.Grid
 {
-    public class TreeAccessor<T>
+    public interface IValueAccessor<T>
     {
-        private Tree<T> tree;
+        bool GetActive(GridIndex index);
 
-        public TreeAccessor(Tree<T> tree)
+        T GetValue(GridIndex index);
+
+        void GetValue(GridIndex index, out T value, out bool isActive);
+
+        void SetValue(GridIndex index, T value);
+
+        void SetValueNoActivate(GridIndex index, T value);
+
+        void Deactivate(GridIndex index);
+    }
+
+    public class TreeAccessor<T, BlockType> : IValueAccessor<T>
+    {
+        private Tree<T, BlockType> tree;
+
+        public TreeAccessor(Tree<T, BlockType> tree)
         {
             this.tree = tree;
         }

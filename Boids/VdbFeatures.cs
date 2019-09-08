@@ -244,7 +244,7 @@ namespace Shwarm.Boids
         {
             if (vdb.TryGetLatestKeyframeData<VdbBoidGridKeyframe>(currentFrame, out var gridData, out int frame))
             {
-                Grid.TreeAccessor<float> acc = gridData.grid.Tree.GetAccessor();
+                Grid.IValueAccessor<float> acc = gridData.grid.Tree.GetAccessor();
 
                 float3 cellSize = gridData.grid.CellSize;
                 float cellScale = Mathf.Min(cellSize.x, cellSize.y, cellSize.z);

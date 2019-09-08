@@ -7,7 +7,7 @@ using System.Collections.Generic;
 
 namespace Shwarm.Grid
 {
-    public class Tree<T>
+    public class Tree<T, BlockType>
     {
         private readonly Dictionary<BlockIndex, GridBlock<T>> blocks;
         internal Dictionary<BlockIndex, GridBlock<T>> Blocks => blocks;
@@ -17,19 +17,22 @@ namespace Shwarm.Grid
             blocks = new Dictionary<BlockIndex, GridBlock<T>>();
         }
 
-        public Tree<T> Copy()
+        public Tree(Tree<T, BlockType> other)
         {
-            Tree<T> result = new Tree<T>();
-            foreach (var item in blocks)
+            foreach (var item in other.blocks)
             {
-                result.blocks.Add(item.Key, item.Value.Copy());
+                this.blocks.Add(item.Key, item.Value.Copy());
             }
-            return result;
         }
 
-        public TreeAccessor<T> GetAccessor()
+        public Tree<T, BlockType> Copy()
         {
-            return new TreeAccessor<T>(this);
+            return new Tree<T, BlockType>(this);
+        }
+
+        public TreeAccessor<T, BlockType> GetAccessor()
+        {
+            return new TreeAccessor<T, BlockType>(this);
         }
 
         internal bool TryGetBlock(BlockIndex blockIndex, out GridBlock<T> block)
@@ -50,6 +53,23 @@ namespace Shwarm.Grid
         public void Clear()
         {
             blocks.Clear();
+        }
+    }
+
+    public class Tree<T> : Tree<T, GridBlock<T>>
+    {
+        public Tree()
+        {
+        }
+
+        public Tree(Tree<T> other)
+            : base(other)
+        {
+        }
+
+        public new Tree<T> Copy()
+        {
+            return new Tree<T>(this);
         }
     }
 }

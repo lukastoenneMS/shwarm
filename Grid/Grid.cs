@@ -7,10 +7,10 @@ using System.Collections.Generic;
 
 namespace Shwarm.Grid
 {
-    public class Grid<T>
+    public class Grid<T, BlockType>
     {
-        private Tree<T> tree;
-        public Tree<T> Tree => tree;
+        private Tree<T, BlockType> tree;
+        public Tree<T, BlockType> Tree => tree;
 
         private float3 origin;
         public float3 Origin { get => origin; set => origin = value; }
@@ -40,19 +40,20 @@ namespace Shwarm.Grid
             cellSize = new float3(1.0f, 1.0f, 1.0f);
             invCellSize = new float3(1.0f, 1.0f, 1.0f);
 
-            tree = new Tree<T>();
+            tree = new Tree<T, BlockType>();
         }
 
-        public Grid<T> Copy()
+        public Grid(Grid<T, BlockType> other)
         {
-            Grid<T> result = new Grid<T>();
+            this.origin = other.origin;
+            this.cellSize = other.cellSize;
+            this.invCellSize = other.invCellSize;
+            this.tree = other.tree.Copy();
+        }
 
-            result.origin = origin;
-            result.cellSize = cellSize;
-            result.invCellSize = invCellSize;
-            result.tree = tree.Copy();
-
-            return result;
+        public Grid<T, BlockType> Copy()
+        {
+            return new Grid<T, BlockType>(this);
         }
 
         public float3 TransformCorner(float3 gridIndex)
@@ -114,6 +115,23 @@ namespace Shwarm.Grid
         private int iFloor(float x)
         {
             return x >= 0.0f ? (int)x : (int)x - 1;
+        }
+    }
+
+    public class Grid<T> : Grid<T, GridBlock<T>>
+    {
+        public Grid()
+        {
+        }
+
+        public Grid(Grid<T> other)
+            : base(other)
+        {
+        }
+
+        public new Grid<T> Copy()
+        {
+            return new Grid<T>(this);
         }
     }
 }

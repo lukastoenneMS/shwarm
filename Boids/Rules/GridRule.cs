@@ -12,7 +12,7 @@ namespace Shwarm.Boids
     public class GridRule : BoidRule
     {
         private Grid<float> grid;
-        private TreeAccessor<float> treeAcc;
+        private IValueAccessor<float> treeAcc;
 
         private float time;
         private const float ChangeInterval = 0.5f;
