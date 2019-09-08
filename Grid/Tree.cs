@@ -19,6 +19,7 @@ namespace Shwarm.Grid
 
         public Tree(Tree<T, BlockType> other)
         {
+            blocks = new Dictionary<BlockIndex, BlockType>();
             foreach (var item in other.blocks)
             {
                 this.blocks.Add(item.Key, (BlockType)item.Value.Copy());
