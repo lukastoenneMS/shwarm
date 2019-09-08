@@ -3,6 +3,10 @@
 
 namespace Shwarm.Grid
 {
+    // XXX Have a look at performance implications of using an interface here.
+    // This was introduced to avoid verbose types when return accessors from trees,
+    // but there may be other workarounds,
+    // like making fully templated accessor types convertible to simpler ones.
     public interface IValueAccessor<T>
     {
         bool GetActive(GridIndex index);
