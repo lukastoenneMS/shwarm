@@ -6,6 +6,8 @@ using Shwarm.MathUtils;
 using Shwarm.Conversions;
 using UnityEngine;
 
+using Transform = Shwarm.MathUtils.Transform;
+
 namespace Shwarm.Boids
 {
     [CreateAssetMenu(fileName = "GridRule", menuName = "Boids/GridRule", order = 1)]
@@ -24,7 +26,7 @@ namespace Shwarm.Boids
         public GridRule()
         {
             grid = new Grid<float>();
-            grid.Transform.CellSize = new float3(1, 1, 1) * 0.06f;
+            grid.Transform = new Transform(float3.Zero, float3.One * 0.06f);
             treeAcc = grid.Tree.GetAccessor();
             time = 0.0f;
             rng = new System.Random(83523);

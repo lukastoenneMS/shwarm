@@ -6,7 +6,7 @@ using System;
 
 namespace Shwarm.MathUtils
 {
-    public class Transform
+    public struct Transform
     {
         private float3 origin;
         public float3 Origin { get => origin; set => origin = value; }
