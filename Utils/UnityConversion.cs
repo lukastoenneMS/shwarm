@@ -4,7 +4,7 @@
 using Shwarm.MathUtils;
 using UnityEngine;
 
-namespace Shwarm.Unity
+namespace Shwarm.Conversions
 {
     public static class UnityMathExtensions
     {
