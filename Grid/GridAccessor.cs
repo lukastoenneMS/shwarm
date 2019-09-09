@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
+using Shwarm.MathUtils;
+
 namespace Shwarm.Grid
 {
     // XXX Have a look at performance implications of using an interface here.

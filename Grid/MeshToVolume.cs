@@ -8,15 +8,15 @@ namespace Shwarm.Grid
 {
     public static class PointCloudConverter
     {
-        public static void Convert(IReadOnlyCollection<float3> points, Grid<float> distGrid, Tree<int> indexTree)
+        public static void Convert(IReadOnlyCollection<float3> points, Tree<float, GridBlock<float>> distTree, Tree<int> indexTree, Transform xform)
         {
-            IValueAccessor<float> distAcc = distGrid.Tree.GetAccessor();
+            IValueAccessor<float> distAcc = distTree.GetAccessor();
             IValueAccessor<int> indexAcc = indexTree.GetAccessor();
 
             int index = 0; 
             foreach (float3 p in points)
             {
-                distGrid.InverseTransformCenter(p, out GridIndex gridIndex, out float3 cellOffset);
+                xform.InverseTransformCenter(p, out GridIndex gridIndex, out float3 cellOffset);
 
                 bool curActive = indexAcc.GetActive(gridIndex);
                 if (curActive)

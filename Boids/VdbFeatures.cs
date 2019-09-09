@@ -246,12 +246,13 @@ namespace Shwarm.Boids
             {
                 Grid.IValueAccessor<float> acc = gridData.grid.Tree.GetAccessor();
 
-                float3 cellSize = gridData.grid.CellSize;
+                Shwarm.MathUtils.Transform xform = gridData.grid.Transform;
+                float3 cellSize = xform.CellSize;
                 float cellScale = Mathf.Min(cellSize.x, cellSize.y, cellSize.z);
 
                 for (var iter = Grid.GridIterator.GetCells(gridData.grid); iter.MoveNext(); )
                 {
-                    Vector3 center = gridData.grid.TransformCenter(iter.Current.Item1).ToVector3();
+                    Vector3 center = xform.TransformCenter(iter.Current.Item1).ToVector3();
                     float size = cellScale;
                     float pickSize = size * 1.2f;
                     renderer.DrawCube(0, new Vector3(center.x, center.y, center.z), Quaternion.identity, pickSize, size, Color.white, new Color(1.0f, 0.5f, 0.0f));

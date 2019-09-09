@@ -7,6 +7,9 @@ namespace Shwarm.MathUtils
 {
     public struct float3
     {
+        public static readonly float3 Zero = new float3(0, 0, 0);
+        public static readonly float3 One = new float3(1, 1, 1);
+
         public float x;
         public float y;
         public float z;

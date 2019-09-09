@@ -24,7 +24,7 @@ namespace Shwarm.Boids
         public GridRule()
         {
             grid = new Grid<float>();
-            grid.CellSize = new float3(1, 1, 1) * 0.06f;
+            grid.Transform.CellSize = new float3(1, 1, 1) * 0.06f;
             treeAcc = grid.Tree.GetAccessor();
             time = 0.0f;
             rng = new System.Random(83523);
@@ -59,7 +59,7 @@ namespace Shwarm.Boids
 
                 Tree<int> indexTree = new Tree<int>();
                 grid.Tree.Clear();
-                PointCloudConverter.Convert(points, grid, indexTree);
+                PointCloudConverter.Convert(points, grid.Tree, indexTree, grid.Transform);
 
                 BoidDebug.SetGrid(grid);
             }
