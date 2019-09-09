@@ -10,7 +10,7 @@ using UnityEngine.Assertions;
 namespace Shwarm.Boids
 {
     [System.Serializable]
-    public class BoidSettings
+    public class BoidParticleSettings
     {
         public float MinSpeed = 0.0f;
         public float MaxSpeed = 10.0f;
@@ -18,11 +18,6 @@ namespace Shwarm.Boids
         public float MaxBackwardAcceleration = 0.1f;
         public float MaxAngularVelocity = 90.0f;
         public float MaxAngularAcceleration = 10.0f;
-
-        /// <summary>
-        /// Consider boids as neighbors when they are closer.
-        /// </summary>
-        public float NeighborDistance = 1.0f;
 
         /// <summary>
         /// Distance that should be kept between boids.
@@ -37,8 +32,8 @@ namespace Shwarm.Boids
     public class BoidParticle : MonoBehaviour
     {
         [SerializeField]
-        private BoidSettings settings = new BoidSettings();
-        public BoidSettings Settings => settings;
+        private BoidParticleSettings settings = new BoidParticleSettings();
+        public BoidParticleSettings Settings => settings;
 
         public int CurrentRuleIndex = -1;
 

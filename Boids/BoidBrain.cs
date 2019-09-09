@@ -10,14 +10,29 @@ using UnityEngine.Assertions;
 namespace Shwarm.Boids
 {
     [System.Serializable]
+    public class BoidSettings
+    {
+        /// <summary>
+        /// Consider boids as neighbors when they are closer.
+        /// </summary>
+        public float InteractionRadius = 1.0f;
+
+        /// <summary>
+        /// Priority offset for the current rule to prevent immediate switching
+        /// </summary>
+        public float CurrentRuleBias = 0.0f;
+    }
+
+    [System.Serializable]
     public class BoidBrain : MonoBehaviour
     {
         [SerializeField]
+        private BoidSettings settings = new BoidSettings();
+        public BoidSettings Settings => settings;
+
+        [SerializeField]
         private List<BoidRule> rules = new List<BoidRule>();
         public List<BoidRule> Rules => rules;
-
-        /// Priority offset for the current rule to prevent immediate switching
-        public float CurrentRuleBias = 0.0f;
 
         private readonly List<BoidTarget> ruleTargets = new List<BoidTarget>();
         private readonly List<float> rulePriorities = new List<float>();
@@ -26,7 +41,7 @@ namespace Shwarm.Boids
 
         public void Awake()
         {
-            context = new BoidContext();
+            context = new BoidContext(settings);
 
             context.UpdateBoidParticles(GetComponentsInChildren<BoidParticle>());
 
@@ -132,7 +147,7 @@ namespace Shwarm.Boids
                     if (ruleIndex == currentRuleIndex)
                     {
                         // Add bias to the current rule's importance to avoid immediate switching
-                        priority += CurrentRuleBias;
+                        priority += settings.CurrentRuleBias;
                     }
 
                     if (priority > maxPriority)
@@ -159,7 +174,7 @@ namespace Shwarm.Boids
                     if (ruleIndex == currentRuleIndex)
                     {
                         // Add bias to the current rule's importance to avoid immediate switching
-                        priority += CurrentRuleBias;
+                        priority += settings.CurrentRuleBias;
                     }
 
                     // Exponential weight based on priority

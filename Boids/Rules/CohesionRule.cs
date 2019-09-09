@@ -16,10 +16,10 @@ namespace Shwarm.Boids
 
         public override bool Evaluate(BoidContext context, BoidParticle boid, int boidIndex, BoidState state, out BoidTarget target, out float priority)
         {
-            BoidSettings settings = boid.Settings;
+            BoidParticleSettings settings = boid.Settings;
 
             queryResults.Clear();
-            context.Query.Radius(context.Tree, state.position, settings.NeighborDistance, queryResults);
+            context.Query.Radius(context.Tree, state.position, context.Settings.InteractionRadius, queryResults);
 
             int count = 0;
             Vector3 center = Vector3.zero;

@@ -31,6 +31,9 @@ namespace Shwarm.Boids
 
     public class BoidContext
     {
+        private readonly BoidSettings settings;
+        public BoidSettings Settings => settings;
+
         private const int maxPointsPerLeafNode = 32;
 
         private KDTree tree;
@@ -44,8 +47,10 @@ namespace Shwarm.Boids
         private BoidParticle[] boids = new BoidParticle[0];
         public BoidParticle[] Boids => boids;
 
-        public BoidContext()
+        public BoidContext(BoidSettings settings)
         {
+            this.settings = settings;
+
             int maxPointsPerLeafNode = 32;
             tree = new KDTree(maxPointsPerLeafNode);
             query = new KDQuery();

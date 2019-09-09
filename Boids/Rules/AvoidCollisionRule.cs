@@ -27,7 +27,7 @@ namespace Shwarm.Boids
 
         public override bool Evaluate(BoidContext context, BoidParticle boid, int boidIndex, BoidState state, out BoidTarget target, out float priority)
         {
-            BoidSettings settings = boid.Settings;
+            BoidParticleSettings settings = boid.Settings;
             int count = 0;
             Vector3 steer = Vector3.zero;
 
