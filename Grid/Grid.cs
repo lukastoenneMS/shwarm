@@ -17,7 +17,7 @@ namespace Shwarm.Grid
 
         public Grid()
         {
-            transform = new Transform(float3.Zero, float3.One);
+            transform = new Transform(float3.One, float3.Zero);
             tree = new Tree<T, BlockType>();
         }
 
