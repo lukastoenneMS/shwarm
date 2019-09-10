@@ -26,7 +26,7 @@ namespace Shwarm.Boids
         public GridRule()
         {
             grid = new Grid<float>();
-            grid.Transform = new Transform(float3.Zero, float3.One * 0.06f);
+            grid.Transform = new Transform(float3.One * 0.06f, float3.Zero);
             treeAcc = grid.Tree.GetAccessor();
             time = 0.0f;
             rng = new System.Random(83523);
