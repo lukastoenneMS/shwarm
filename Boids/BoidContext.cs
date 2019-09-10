@@ -2,10 +2,16 @@
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
 using DataStructures.ViliWonka.KDTree;
+using Shwarm.Conversions;
+using Shwarm.MathUtils;
 using System;
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.Events;
+using Unity.Collections;
+using Unity.Jobs;
+
+using Physics = UnityEngine.Physics;
+using Vector3 = UnityEngine.Vector3;
+using RaycastHit = UnityEngine.RaycastHit;
+using QueryTriggerInteraction = UnityEngine.QueryTriggerInteraction;
 
 namespace Shwarm.Boids
 {
@@ -41,6 +47,9 @@ namespace Shwarm.Boids
         private KDQuery query;
         public KDQuery Query => query;
 
+        private readonly Grid.Grid<float> testGrid;
+        public Grid.Grid<float> TestGrid => testGrid;
+
         private BoidState[] states = new BoidState[0];
         public BoidState[] States => states;
 
@@ -54,6 +63,11 @@ namespace Shwarm.Boids
             int maxPointsPerLeafNode = 32;
             tree = new KDTree(maxPointsPerLeafNode);
             query = new KDQuery();
+
+            float cellSize = settings.InteractionRadius;
+            var xform = new Transform(float3.One * cellSize, float3.Zero);
+            testGrid = new Grid.Grid<float>();
+            testGrid.Transform = xform;
         }
 
         public void UpdateBoidParticles(BoidParticle[] newBoids)
@@ -94,6 +108,41 @@ namespace Shwarm.Boids
         public void Prepare()
         {
             int numBoids = boids.Length;
+
+            var xform = testGrid.Transform;
+
+
+            NativeArray<float3> points = new NativeArray<float3>(numBoids, Unity.Collections.Allocator.Persistent);
+            for (int i = 0; i < numBoids; ++i)
+            {
+                boids[i].GetPhysicsState(states[i]);
+                points[i] = states[i].position.ToFloat3();
+            }
+
+            { /// TEST
+                Grid.Tree<int> indexTree = new Grid.Tree<int>();
+                testGrid.Tree.Clear();
+                float3[] simplePoints = new float3[points.Length];
+                points.CopyTo(simplePoints);
+                Grid.PointCloudConverter.Convert(simplePoints, testGrid.Tree, indexTree, testGrid.Transform);
+                BoidDebug.SetGrid(testGrid);
+            } /// TEST
+
+            var pointToIndexJob = new Grid.PointToIndexCornerJob(points, xform);
+
+            JobHandle pointToIndexJobHandle = pointToIndexJob.Schedule(points.Length, 64);
+            pointToIndexJobHandle.Complete();
+
+            var result = pointToIndexJob.Indices;
+            for (int i = 0; i < numBoids; ++i)
+            {
+                float3 pw = points[i];
+                float3 pi = result[i];
+                // UnityEngine.Debug.Log($"({pw.x:F3}, {pw.y:F3}, {pw.z:F3}) -> ({pi.x:F3}, {pi.y:F3}, {pi.z:F3})");
+            }
+
+            points.Dispose();
+            result.Dispose();
 
             tree.SetCount(numBoids);
             for (int i = 0; i < numBoids; ++i)

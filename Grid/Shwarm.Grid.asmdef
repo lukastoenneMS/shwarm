@@ -1,7 +1,8 @@
 {
     "name": "Shwarm.Grid",
     "references": [
-        "Shwarm.Utils"
+        "Shwarm.Utils",
+        "Unity.Collections"
     ],
     "optionalUnityReferences": [],
     "includePlatforms": [],

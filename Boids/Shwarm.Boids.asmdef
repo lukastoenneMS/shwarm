@@ -4,7 +4,8 @@
         "Shwarm.Grid",
         "Shwarm.KDTree",
         "Shwarm.Utils",
-        "Shwarm.VisualDebugger"
+        "Shwarm.VisualDebugger",
+        "Unity.Collections"
     ],
     "optionalUnityReferences": [],
     "includePlatforms": [],

@@ -9,7 +9,7 @@ namespace Shwarm.Boids
 {
     public class BoidGenerator
     {
-        public float radius = 2.5f;
+        public float radius = 1.5f;
 
         private static Vector3 sampleUnitSphereSurface(System.Random rng)
         {
