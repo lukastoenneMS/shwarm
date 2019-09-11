@@ -63,7 +63,7 @@ namespace Shwarm.MathUtils
         public void InverseTransformCorner(float3 point, out GridIndex gridIndex, out float3 cellOffset)
         {
             InverseTransformCorner(point, out float3 pGrid);
-            gridIndex = new GridIndex(iFloor(pGrid.x), iFloor(pGrid.y), iFloor(pGrid.z));
+            gridIndex = new GridIndex(MathUtils.iFloor(pGrid.x), MathUtils.iFloor(pGrid.y), MathUtils.iFloor(pGrid.z));
             cellOffset = new float3(
                 pGrid.x - (float)Math.Floor(pGrid.x),
                 pGrid.y - (float)Math.Floor(pGrid.y),
@@ -72,7 +72,7 @@ namespace Shwarm.MathUtils
         public void InverseTransformCorner(float3 point, out GridIndex gridIndex)
         {
             InverseTransformCorner(point, out float3 pGrid);
-            gridIndex = new GridIndex(iFloor(pGrid.x), iFloor(pGrid.y), iFloor(pGrid.z));
+            gridIndex = new GridIndex(MathUtils.iFloor(pGrid.x), MathUtils.iFloor(pGrid.y), MathUtils.iFloor(pGrid.z));
         }
 
         public void InverseTransformCenter(float3 point, out float3 gridIndex)
@@ -82,7 +82,7 @@ namespace Shwarm.MathUtils
         public void InverseTransformCenter(float3 point, out GridIndex gridIndex, out float3 cellOffset)
         {
             InverseTransformCenter(point, out float3 pGrid);
-            gridIndex = new GridIndex(iFloor(pGrid.x), iFloor(pGrid.y), iFloor(pGrid.z));
+            gridIndex = new GridIndex(MathUtils.iFloor(pGrid.x), MathUtils.iFloor(pGrid.y), MathUtils.iFloor(pGrid.z));
             cellOffset = new float3(
                 pGrid.x - (float)Math.Floor(pGrid.x),
                 pGrid.y - (float)Math.Floor(pGrid.y),
@@ -91,12 +91,7 @@ namespace Shwarm.MathUtils
         public void InverseTransformCenter(float3 point, out GridIndex gridIndex)
         {
             InverseTransformCenter(point, out float3 pGrid);
-            gridIndex = new GridIndex(iFloor(pGrid.x), iFloor(pGrid.y), iFloor(pGrid.z));
-        }
-
-        private int iFloor(float x)
-        {
-            return x >= 0.0f ? (int)x : (int)x - 1;
+            gridIndex = new GridIndex(MathUtils.iFloor(pGrid.x), MathUtils.iFloor(pGrid.y), MathUtils.iFloor(pGrid.z));
         }
     }
 }

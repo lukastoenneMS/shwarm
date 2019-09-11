@@ -75,6 +75,20 @@ namespace Shwarm.MathUtils
             this.k = k;
         }
 
+        public GridIndex(float x, float y, float z)
+        {
+            this.i = MathUtils.iFloor(x);
+            this.j = MathUtils.iFloor(y);
+            this.k = MathUtils.iFloor(z);
+        }
+
+        public GridIndex(float3 v)
+        {
+            this.i = MathUtils.iFloor(v.x);
+            this.j = MathUtils.iFloor(v.y);
+            this.k = MathUtils.iFloor(v.z);
+        }
+
         public override int GetHashCode()
         {
             return HashUtils.CombineHashCodes(i, j, k);
