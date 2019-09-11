@@ -41,32 +41,41 @@ namespace Shwarm.Grid
     /// <summary>
     /// This operator sorts points into per-block bins based on grid-space positions.
     /// </summary>
-    public struct PointBinningJob : IJobParallelFor
+    public struct PointPartitionJob : IJobParallelFor
     {
         [ReadOnly]
         private NativeArray<float3> points;
 
-        private NativeHashMap<BlockIndex, NativeArray<int>> indexListMap;
+        private NativeHashMap<BlockIndex, NativeList<int>> indexListMap;
         /// <summary>
         /// Map of per-block index lists, containing indices of all points within a block.
         /// </summary>
-        public NativeHashMap<BlockIndex, NativeArray<int>> IndexListMap => indexListMap;
+        public NativeHashMap<BlockIndex, NativeList<int>> IndexListMap => indexListMap;
 
-        private readonly int binLog2Dim;
-        private readonly int binMask;
+        private readonly int bucketLog2Dim;
+        private readonly int bucketMask;
 
-        public PointBinningJob(NativeArray<float3> points, int binLog2Dim)
+        public PointPartitionJob(NativeArray<float3> points, int bucketLog2Dim)
         {
             this.points = points;
-            this.indexListMap = new NativeHashMap<BlockIndex, NativeArray<int>>();
-            this.binLog2Dim = binLog2Dim + IndexDetails.BlockLog2Dim;
-            this.binMask = (1 << binLog2Dim) - 1;
+            this.indexListMap = new NativeHashMap<BlockIndex, NativeList<int>>();
+            this.bucketLog2Dim = bucketLog2Dim;
+            this.bucketMask = (1 << bucketLog2Dim) - 1;
         }
 
         public void Execute(int i)
         {
-            
-            // result[i] = a[i] + b[i];
+            float3 p = points[i];
+            GridIndex gridIndex = new GridIndex(p);
+            BlockIndex blockIndex = IndexDetails.GridToBlockIndex(gridIndex);
+
+            if (!indexListMap.TryGetValue(blockIndex, out NativeList<int> indexList))
+            {
+                indexList = new NativeList<int>(Allocator.TempJob);
+                indexListMap.TryAdd(blockIndex, indexList);
+            }
+
+            indexList.Add(i);
         }
     }
 
