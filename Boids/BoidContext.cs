@@ -5,6 +5,7 @@ using DataStructures.ViliWonka.KDTree;
 using Shwarm.Conversions;
 using Shwarm.MathUtils;
 using System;
+using System.Linq;
 using Unity.Collections;
 using Unity.Jobs;
 
@@ -64,7 +65,7 @@ namespace Shwarm.Boids
             tree = new KDTree(maxPointsPerLeafNode);
             query = new KDQuery();
 
-            float cellSize = settings.InteractionRadius;
+            float cellSize = settings.InteractionRadius * 2.0f;
             var xform = new Transform(float3.One * cellSize, float3.Zero);
             testGrid = new Grid.Grid<float>();
             testGrid.Transform = xform;
@@ -111,38 +112,90 @@ namespace Shwarm.Boids
 
             var xform = testGrid.Transform;
 
-
-            NativeArray<float3> points = new NativeArray<float3>(numBoids, Unity.Collections.Allocator.Persistent);
+            NativeArray<float3> worldPoints = new NativeArray<float3>(numBoids, Unity.Collections.Allocator.Persistent);
             for (int i = 0; i < numBoids; ++i)
             {
                 boids[i].GetPhysicsState(states[i]);
-                points[i] = states[i].position.ToFloat3();
+                worldPoints[i] = states[i].position.ToFloat3();
             }
 
             { /// TEST
                 Grid.Tree<int> indexTree = new Grid.Tree<int>();
                 testGrid.Tree.Clear();
-                float3[] simplePoints = new float3[points.Length];
-                points.CopyTo(simplePoints);
+                float3[] simplePoints = new float3[numBoids];
+                worldPoints.CopyTo(simplePoints);
                 Grid.PointCloudConverter.Convert(simplePoints, testGrid.Tree, indexTree, testGrid.Transform);
                 BoidDebug.SetGrid(testGrid);
             } /// TEST
 
-            var pointToIndexJob = new Grid.PointToIndexCornerJob(points, xform);
+            int batchCount = 64;
 
-            JobHandle pointToIndexJobHandle = pointToIndexJob.Schedule(points.Length, 64);
-            pointToIndexJobHandle.Complete();
+            // Transforms world-space points into grid coordinates
+            var pointToIndexJob = new Grid.PointToGridJob(worldPoints, xform);
+            JobHandle pointToIndexJobHandle = pointToIndexJob.Schedule(numBoids, batchCount);
+            var blockIndices = pointToIndexJob.BlockIndices;
 
-            var result = pointToIndexJob.Indices;
-            for (int i = 0; i < numBoids; ++i)
-            {
-                float3 pw = points[i];
-                float3 pi = result[i];
-                // UnityEngine.Debug.Log($"({pw.x:F3}, {pw.y:F3}, {pw.z:F3}) -> ({pi.x:F3}, {pi.y:F3}, {pi.z:F3})");
+            // Count the number of points in each block, in preparation for allocating sorting bins
+            var pointPartitionCountJob = new Grid.PointPartitionCountJob(blockIndices);
+            JobHandle pointPartitionCountJobHandle = pointPartitionCountJob.Schedule(pointToIndexJobHandle);
+            var blockCounts = pointPartitionCountJob.BlockCounts;
+            var blockOffsets = pointPartitionCountJob.BlockOffsets;
+
+            // Radix-sort the points into per-block bins, in a combined output list
+            // var pointPartitionJob = new Grid.PointPartitionJob(blockIndices, blockOffsets);
+            // JobHandle pointPartitionJobHandle = pointPartitionJob.Schedule(numBoids, batchCount, pointPartitionCountJobHandle);
+            // var pointIndices = pointPartitionJob.PointIndices;
+
+            NativeHashMap<BlockIndex, Grid.TestContainer> blockPoints;
+            {// REMOVE! should be allocated by pointPartitionCountJob
+                pointPartitionCountJobHandle.Complete();
+                var blocks = blockCounts.GetKeyArray(Allocator.Temp);
+                var counts = blockCounts.GetValueArray(Allocator.Temp);
+                blockPoints = new NativeHashMap<BlockIndex, Grid.TestContainer>(blocks.Length, Allocator.Temp);
+                for (int i = 0; i < blocks.Length; ++i)
+                {
+                    blockPoints.TryAdd(blocks[i], new Grid.TestContainer(counts[i], Allocator.TempJob));
+                }
+                blocks.Dispose();
+                counts.Dispose();
             }
 
-            points.Dispose();
-            result.Dispose();
+            var pointPartitionJob = new Grid.PointPartitionJob2(blockIndices, blockPoints);
+            JobHandle pointPartitionJobHandle = pointPartitionJob.Schedule(numBoids, batchCount, pointPartitionCountJobHandle);
+
+            pointPartitionJobHandle.Complete();
+
+            // for (int i = 0; i < numBoids; ++i)
+            // {
+            //     float3 pw = worldPoints[i];
+            //     float3 pi = gridPoints[i];
+            //     UnityEngine.Debug.Log($"({pw.x:F3}, {pw.y:F3}, {pw.z:F3}) -> ({pi.x:F3}, {pi.y:F3}, {pi.z:F3})");
+            // }
+
+            // {
+            //     var blocks = blockCounts.GetKeyArray(Allocator.Temp);
+            //     var counts = blockCounts.GetValueArray(Allocator.Temp);
+            //     UnityEngine.Debug.Log($"Blocks: " + string.Join(" ", Enumerable.Range(0, blocks.Length).Select(i => $"[{blocks[i]}]:{counts[i]}")));
+            //     blocks.Dispose();
+            //     counts.Dispose();
+            // }
+
+            {
+                var blocks = blockPoints.GetKeyArray(Allocator.Temp);
+                var lists = blockPoints.GetValueArray(Allocator.Temp);
+                UnityEngine.Debug.Log(
+                    $"Blocks: " + string.Join("\n", Enumerable.Range(0, blocks.Length).Select(
+                        i => $"{blocks[i]}: {string.Join(" ", lists[i].points)}")
+                    )
+                );
+                blocks.Dispose();
+                lists.Dispose();
+            }
+
+            worldPoints.Dispose();
+            pointToIndexJob.DisposeResults();
+            pointPartitionCountJob.DisposeResults();
+            pointPartitionJob.DisposeResults();
 
             tree.SetCount(numBoids);
             for (int i = 0; i < numBoids; ++i)
